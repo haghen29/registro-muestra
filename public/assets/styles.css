@@ -204,6 +204,8 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
   font-weight: 600; margin: 0 0 16px;
 }
 .foot-note { text-align: center; color: var(--muted); font-size: .9rem; margin: 16px 0 0; }
+/* Créditos: chicos y discretos, debajo del formulario */
+.credits { text-align: center; color: var(--muted); opacity: .75; font-size: .75rem; line-height: 1.4; margin: 14px 8px 0; }
 
 /* ---------- Pantalla de éxito (el "pase" que se muestra en la puerta) ---------- */
 .pass {

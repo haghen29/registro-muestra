@@ -34,6 +34,8 @@
     .qr-box img, .qr-box canvas { display: block; width: 100mm !important; height: auto !important; max-width: 100%; aspect-ratio: 1; }
     .poster-bottom { background: var(--accent); color: var(--accent-ink); padding: 16px; font-weight: 700; font-size: clamp(1.05rem, 4.2vw, 1.25rem); }
     .poster-url { display: block; font-weight: 600; font-size: .95rem; margin-top: 4px; overflow-wrap: anywhere; }
+    /* Créditos: chicos y discretos, al pie del cartel */
+    .poster .poster-credits { margin: 0; padding: 7px 16px 8px; font-size: .72rem; line-height: 1.35; color: #8fa3bf; }
     @media print {
       @page { size: A4; margin: 10mm; }
       body { background: #fff; }
@@ -64,6 +66,7 @@
       Mostrá la pantalla verde en la puerta
       <span class="poster-url" id="url-text"></span>
     </div>
+    <p class="poster-credits">Desarrollado por Eluney Alcaraz, Adrian Estigarribia, Santino Borio Perez, Leandro Burgos, Leila Luna y Mateo Castillo</p>
   </article>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>

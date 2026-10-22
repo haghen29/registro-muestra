@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f2d52">
+  <title>Registro de ingreso · Muestra Educativa · E.E.S.T. N°4 Berazategui</title>
+  <meta name="description" content="Registrate para ingresar a la Muestra Educativa de la E.E.S.T. N°4 de Berazategui.">
+  <link rel="icon" href="https://tecnica4berazategui.edu.ar/img/LogoTec4Blanco.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24..48,400..700,0..1,0&display=block" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/styles.css">
+</head>
+<body>
+
+  <!-- ===== Formulario ===== -->
+  <main id="view-form">
+    <header class="band">
+      <div class="brand">
+        <img src="https://tecnica4berazategui.edu.ar/img/LogoTec4Blanco.png" alt="Logo E.E.S.T. N°4" onerror="this.remove()">
+        <span class="brand-name">E.E.S.T. N°4<br>Berazategui</span>
+      </div>
+      <div class="hero">
+        <p class="hero-kicker">Bienvenidos a la</p>
+        <h1 aria-label="Muestra educativa"><span id="typed" aria-hidden="true"></span><span class="caret" aria-hidden="true"></span></h1>
+        <p class="lead">Completá tus datos para entrar. Tarda menos de un minuto.</p>
+      </div>
+    </header>
+
+    <div class="sheet">
+      <form id="form" class="card" novalidate>
+        <h2>Tus datos</h2>
+        <p class="hint">Al terminar, mostrale la pantalla verde al alumno de la puerta.</p>
+
+        <p class="form-error" id="form-error" role="alert" hidden></p>
+
+        <div class="row-2">
+          <div class="field" data-field="nombre">
+            <label for="nombre">Nombre</label>
+            <input class="input" id="nombre" name="nombre" autocomplete="given-name" autocapitalize="words" maxlength="80" required>
+          </div>
+          <div class="field" data-field="apellido">
+            <label for="apellido">Apellido</label>
+            <input class="input" id="apellido" name="apellido" autocomplete="family-name" autocapitalize="words" maxlength="80" required>
+          </div>
+        </div>
+
+        <div class="field" data-field="dni">
+          <label for="dni">DNI</label>
+          <input class="input" id="dni" name="dni" inputmode="numeric" autocomplete="off" maxlength="10" placeholder="Solo números" required>
+        </div>
+
+        <fieldset class="field" data-field="conAlumno">
+          <legend class="legend">¿Venís a ver a un alumno?</legend>
+          <div class="choices">
+            <label class="choice">
+              <input type="radio" name="conAlumno" value="si">
+              <span><i class="ms" aria-hidden="true">school</i>Sí</span>
+            </label>
+            <label class="choice">
+              <input type="radio" name="conAlumno" value="no">
+              <span><i class="ms" aria-hidden="true">person</i>No</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div class="alumno-box" id="alumno-box" hidden>
+          <div class="field" data-field="alumno">
+            <label for="alumno">Nombre del alumno</label>
+            <input class="input" id="alumno" name="alumno" autocapitalize="words" maxlength="120" placeholder="Nombre y apellido">
+          </div>
+          <div class="row-2 row-2-keep">
+            <div class="field" data-field="curso">
+              <label for="curso">Año</label>
+              <select class="select" id="curso" name="curso">
+                <option value="">Año</option>
+                <option value="1">1°</option><option value="2">2°</option><option value="3">3°</option>
+                <option value="4">4°</option><option value="5">5°</option><option value="6">6°</option>
+                <option value="7">7°</option>
+              </select>
+            </div>
+            <div class="field" data-field="division">
+              <label for="division">División</label>
+              <select class="select" id="division" name="division">
+                <option value="">División</option>
+                <option value="1">1ª</option><option value="2">2ª</option><option value="3">3ª</option>
+                <option value="4">4ª</option><option value="5">5ª</option><option value="6">6ª</option>
+              </select>
+            </div>
+          </div>
+          <div class="field" data-field="parentesco">
+            <label for="parentesco">Parentesco</label>
+            <select class="select" id="parentesco" name="parentesco">
+              <option value="">Elegí una opción</option>
+              <option>Padre</option>
+              <option>Madre</option>
+              <option>Hermano/a</option>
+              <option>Abuelo/a</option>
+              <option>Tío/a</option>
+              <option>Amigo/a</option>
+              <option>Otro</option>
+            </select>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-block" id="submit" type="submit">
+          <i class="ms" aria-hidden="true">how_to_reg</i><span>Registrarme</span>
+        </button>
+        <p class="foot-note">Tus datos se usan solo para el control de ingreso a la muestra.</p>
+      </form>
+    </div>
+  </main>
+
+  <!-- ===== Pase de ingreso ===== -->
+  <section id="view-pass" class="pass" hidden aria-live="polite">
+    <div class="pass-inner">
+      <div class="brand">
+        <img src="https://tecnica4berazategui.edu.ar/img/LogoTec4Blanco.png" alt="Logo E.E.S.T. N°4" onerror="this.remove()">
+        <span class="brand-name">Muestra Educativa<br>E.E.S.T. N°4</span>
+      </div>
+
+      <div class="pass-check"><i class="ms" aria-hidden="true">check</i></div>
+      <h1 class="pass-title">Registrado</h1>
+      <p class="pass-sub">Mostrá esta pantalla en la puerta.</p>
+
+      <p class="pass-dup" id="pass-dup" hidden>Este DNI ya estaba registrado. Estos son tus datos.</p>
+
+      <div class="pass-ticket">
+        <p class="pass-name" id="pass-name"></p>
+        <dl class="pass-grid">
+          <div><dt>DNI</dt><dd id="pass-dni" class="pass-num"></dd></div>
+          <div><dt>Registro</dt><dd id="pass-id" class="pass-num"></dd></div>
+          <div class="wide"><dt>Visita</dt><dd id="pass-tipo"></dd></div>
+          <div><dt>Hora</dt><dd id="pass-hora" class="pass-num"></dd></div>
+        </dl>
+      </div>
+
+      <div class="pass-actions">
+        <button class="btn btn-ghost-light btn-block" id="otra" type="button">
+          <i class="ms" aria-hidden="true">person_add</i>Registrar a otra persona
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <script src="/assets/form.js"></script>
+</body>
+</html>

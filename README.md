@@ -25,7 +25,7 @@ Una aplicación web que digitaliza todo el ingreso:
 - Año y división del alumno, y pestaña **Alumnos** con una pestaña por curso que muestra el grupo de personas que vino a ver a cada alumno.
 - Pestaña **Inconsistencias**: repetidos, alumnos escritos distinto y registros sospechosos, con fusiones, historial y deshacer.
 - Bloqueo de nombres con números y de nombres de famosos.
-- Cartel del QR para imprimir, con los logos de la Técnica y de la agrupación Atahualpa Yupanqui.
+- Cartel del QR para imprimir, con el logo de la Técnica.
 
 ### Tecnología (resumen)
 Aplicación web con HTML, CSS y JavaScript, servidor en Node.js y base de datos MariaDB. Funciona en cualquier navegador y no necesita que nadie instale una app.
@@ -492,6 +492,10 @@ public/
     form.js          Lógica del formulario: valida, envía a /api/registro y guarda el pase en el celular
     admin.js         Lógica del panel: PIN, actualización cada 2 s, búsqueda, filtros, detección
                      de repetidos y alumnos parecidos, edición, fusiones e historial
+    img/
+      logo-atahualpa.png  Logo de la Agrupación Estudiantil Atahualpa Yupanqui. Hoy no se
+                     muestra en ninguna pantalla; queda guardado por si se quiere volver a usar
+                     (por ejemplo, en el cartel del QR).
 ```
 
 #### Backend general (piezas internas de la API): `api/_*.js`

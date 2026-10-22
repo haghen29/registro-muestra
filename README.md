@@ -37,11 +37,11 @@ Aplicación web con HTML, CSS y JavaScript, servidor en Node.js y base de datos 
 - El **visitante** escanea un QR, completa sus datos en el celular y muestra una pantalla verde en la entrada.
 - Los **recepcionistas** ven los registros en vivo, buscan por apellido, DNI o alumno, marcan el ingreso, corrigen datos, eliminan registros y revisan las inconsistencias (repetidos y datos sospechosos).
 
-| Ruta | Para quién | Qué hace |
+| Dirección | Para quién | Qué hace |
 |---|---|---|
-| `/` | Visitante | Formulario: nombre, apellido, DNI y si viene a ver a un alumno |
-| `/admin` | Recepcionistas | Panel en vivo con PIN |
-| `/qr` | Organización | Cartel A4 para imprimir con el QR del formulario |
+| https://muestra.tec4.ar | Visitante | Formulario: nombre, apellido, DNI y si viene a ver a un alumno |
+| https://muestra.tec4.ar/admin | Recepcionistas | Panel en vivo con PIN |
+| https://muestra.tec4.ar/qr | Organización | Cartel A4 para imprimir con el QR, que apunta a https://muestra.tec4.ar |
 
 **Tecnologías:** HTML, CSS y JavaScript puro · funciones serverless en Node.js (Vercel) · MariaDB. No usa PHP. Ver [Cómo está hecho](#10-cómo-está-hecho).
 
@@ -345,10 +345,18 @@ Todo lo que llega a la API se revisa en el servidor, aunque el formulario ya lo 
 Lo que no cumple se **rechaza con error 400** y no se guarda; no se "arregla" en silencio. Además:
 
 - **Inyección SQL:** todas las consultas usan parámetros (`?`); ningún dato del usuario se pega al texto del SQL.
-- **XSS:** el navegador muestra los datos siempre con `textContent`, nunca como HTML.
+- **XSS:** el navegador muestra los datos siempre con `textContent`, nunca como HTML. No hay `onclick=`, `onerror=` ni `<script>` dentro del HTML: todo el JavaScript está en `public/assets/`, así la CSP puede ser estricta.
+- **Cuerpo del pedido:** si no es un objeto JSON válido (texto suelto, JSON roto, un array), se responde 400. Antes, un JSON roto hacía caer el servidor local.
+- **Largo de los textos:** si un nombre supera el máximo, se rechaza; no se recorta en silencio.
+- **Privacidad del DNI:** si alguien se registra con un DNI que ya existe pero con otro nombre, recibe un error **sin ver los datos** de la persona registrada. Así no se puede averiguar a quién pertenece un DNI probando números. Si el nombre coincide, vuelve a ver su propio pase.
+- **Librería del QR:** `qrcode.js` 1.0.0 (licencia MIT) está copiada en `public/assets/vendor/`. No se carga código de otros sitios.
 - **PIN:** guardado con `scrypt` y sal aleatoria (nunca en texto), comparado con `timingSafeEqual` y con bloqueo por intentos fallidos.
 - **Permisos de la base:** el usuario de la app solo tiene `SELECT`, `INSERT` y `UPDATE`. No puede borrar tablas ni filas.
-- **Cabeceras HTTP** (`vercel.json`): `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` (no se puede meter la app dentro de otra página), `Referrer-Policy` y `Permissions-Policy`.
+- **Cabeceras HTTP** (`vercel.json`): `Content-Security-Policy` (solo scripts propios, sin código en línea), `Strict-Transport-Security` (siempre HTTPS), `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` (no se puede meter la app dentro de otra página), `Referrer-Policy` y `Permissions-Policy`.
+
+**Skill de seguridad:** en `.claude/skills/ciberseguridad-apps-eventos/` hay una skill de Claude Code con las reglas de seguridad de este tipo de apps y la lista de pruebas con datos hostiles. Claude Code la usa sola cuando se trabaja en este proyecto.
+
+Pruebas hechas en la versión `v1.0-colegio`: más de 60 pedidos hostiles mandados directo a la API (HTML/JS, SQL, tipos raros, Unicode, textos larguísimos, DNI inválidos o ajenos, PIN raros, JSON roto). Todos se rechazaron con 400, 401, 409 o 429, sin errores 500 y sin guardarse. Los datos válidos (tildes, ñ, ü, DNI con puntos) siguen pasando.
 
 ---
 
@@ -400,13 +408,24 @@ git push
 
 4. **Deploy.** Si después cambiás una variable, hacé **Redeploy** para que la tome.
 
+### 6.4 Conectar el dominio muestra.tec4.ar
+
+1. En el proyecto de Vercel: **Settings → Domains → Add** y escribí `muestra.tec4.ar`.
+2. Vercel muestra qué registro DNS crear. Normalmente es un **CNAME** con nombre `muestra` que apunta a `cname.vercel-dns.com`. Lo carga quien administra el DNS de `tec4.ar`.
+3. Cuando Vercel muestre el dominio como **Valid Configuration**, el certificado HTTPS se genera solo. Probá:
+   - https://muestra.tec4.ar → formulario
+   - https://muestra.tec4.ar/admin → panel
+   - https://muestra.tec4.ar/qr → cartel
+
+El QR del cartel ya viene apuntando a `https://muestra.tec4.ar/`. Si algún día cambia la dirección, se corrige en `URL_OFICIAL` de `public/assets/qr.js` (o, por única vez, escribiéndola en el cartel y tocando **Actualizar QR**).
+
 Si ya habías vinculado el proyecto con `vercel dev`, vas a ver el proyecto creado en Vercel: entrá, conectalo a GitHub en **Settings → Git** y cargá las variables.
 
 ---
 
 ## 7. El día de la muestra
 
-1. Abrí `https://TU-PROYECTO.vercel.app/qr`, revisá que la URL sea la correcta y tocá **Imprimir cartel**.
+1. Abrí https://muestra.tec4.ar/qr, revisá que abajo del QR diga `muestra.tec4.ar`, escanealo con un celular para confirmar que abre el formulario y tocá **Imprimir cartel**.
 2. Borrá los registros de prueba (ver [comandos SQL](#8-comandos-sql-útiles)).
 3. **Cambiá el PIN 1111** desde la llave del panel y pasale a cada recepcionista la dirección de `/admin` y el PIN nuevo. El PIN queda guardado mientras la pestaña esté abierta.
 4. Probá un registro real desde un celular con datos móviles antes de abrir la puerta.
@@ -484,7 +503,7 @@ La app tiene tres partes que se hablan entre sí:
 | **CSS** | `public/assets/*.css` | El diseño: colores, tamaños y cómo se acomoda en el celular. Sin frameworks como Bootstrap ni Tailwind. |
 | **JavaScript (en el navegador)** | `public/assets/*.js` | Le da vida a las pantallas: valida el formulario, arma la lista del panel, busca, filtra, detecta repetidos y habla con la API. Es JavaScript "puro" (*vanilla*): sin React, Vue ni jQuery. |
 | **Google Fonts** | `<link>` en los HTML | La tipografía **Archivo** y los íconos **Material Symbols** (los íconos son una fuente de letras). |
-| **qrcode.js** | `qr.html` | Librería chica que dibuja el código QR del cartel. Se carga desde cdnjs. |
+| **qrcode.js** | `qr.html` | Librería chica (MIT) que dibuja el código QR del cartel. Está copiada en `public/assets/vendor/`. |
 | **localStorage / sessionStorage** | `form.js`, `admin.js` | Memoria del navegador. El celular del visitante guarda su pase verde para volver a mostrarlo si cierra la página. El panel guarda el PIN mientras la pestaña está abierta y los pares marcados como "No es la misma". |
 | **Node.js** | `api/*.js` | JavaScript que corre en el servidor en lugar del navegador. Es el lenguaje del backend (versión 18 o más). |
 | **Funciones serverless de Vercel** | `api/*.js`, `vercel.json` | Cada archivo de `api/` es un *endpoint* independiente: `api/registro.js` responde en `/api/registro`. No hay un servidor prendido todo el tiempo: Vercel ejecuta la función cuando llega un pedido. En la compu, `vercel dev` simula lo mismo. |
@@ -536,6 +555,10 @@ public/
     form.js          Lógica del formulario: valida, envía a /api/registro y guarda el pase en el celular
     admin.js         Lógica del panel: PIN, actualización cada 2 s, búsqueda, filtros, detección
                      de repetidos y alumnos parecidos, edición, fusiones e historial
+    qr.js            Cartel: arma el QR con https://muestra.tec4.ar/ (URL_OFICIAL) e imprime
+    qr.css           Estilos del cartel
+    vendor/
+      qrcode.min.js  Librería qrcode.js 1.0.0 (MIT) que dibuja el QR
     img/
       logo-atahualpa.png  Logo de la Agrupación Estudiantil Atahualpa Yupanqui. Hoy no se
                      muestra en ninguna pantalla; queda guardado por si se quiere volver a usar

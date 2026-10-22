@@ -29,8 +29,9 @@ const norm = (s) =>
     .replace(/\s+/g, ' ').trim();
 
 // Revisa un nombre. Devuelve el mensaje de error, o null si está bien.
-function errorNombre(valor, { min = 2, campo = 'El nombre' } = {}) {
+function errorNombre(valor, { min = 2, max = 80, campo = 'El nombre' } = {}) {
   if (valor.length < min) return null; // el "falta escribirlo" lo maneja quien llama
+  if (valor.length > max) return `${campo} es demasiado largo (máximo ${max} letras).`;
   if (/\d/.test(valor)) return `${campo} no puede tener números.`;
   if (!SOLO_LETRAS.test(valor)) return `${campo} solo puede tener letras y espacios.`;
   return null;
@@ -63,13 +64,14 @@ function idDe(v) {
 // permitirFamosos: el panel puede guardar a una persona real que se llama igual que un famoso
 function validarVisitante(b = {}, { permitirFamosos = false } = {}) {
   const conAlumno = b.conAlumno === true;
-  const dniTexto = typeof b.dni === 'string' || typeof b.dni === 'number' ? String(b.dni).trim() : '';
+  const dniTexto = typeof b.dni === 'string' || typeof b.dni === 'number' ? String(b.dni).trim().slice(0, 20) : '';
   const datos = {
-    nombre: limpiar(b.nombre, 80),
-    apellido: limpiar(b.apellido, 80),
+    // Se limpian sin recortar: si son más largos que lo permitido, se rechazan (no se cortan en silencio)
+    nombre: limpiar(b.nombre, 1000),
+    apellido: limpiar(b.apellido, 1000),
     dni: /^[\d. ]+$/.test(dniTexto) ? dniTexto.replace(/[. ]/g, '') : '',
     conAlumno,
-    alumno: conAlumno ? limpiar(b.alumno, 120) : null,
+    alumno: conAlumno ? limpiar(b.alumno, 1000) : null,
     curso: conAlumno ? enteroEn(b.curso, CURSO_MAX) : null,
     division: conAlumno ? enteroEn(b.division, DIVISION_MAX) : null,
     parentesco: conAlumno && typeof b.parentesco === 'string' ? b.parentesco : null,
@@ -88,7 +90,7 @@ function validarVisitante(b = {}, { permitirFamosos = false } = {}) {
   if (b.conAlumno !== true && b.conAlumno !== false) errores.conAlumno = 'Elegí Sí o No.';
 
   if (conAlumno) {
-    const errAlumno = errorNombre(datos.alumno, { campo: 'El nombre del alumno' });
+    const errAlumno = errorNombre(datos.alumno, { max: 120, campo: 'El nombre del alumno' });
     if (datos.alumno.length < 2) errores.alumno = 'Escribí el nombre del alumno.';
     else if (errAlumno) errores.alumno = errAlumno;
     else if (!permitirFamosos && esFamoso(datos.alumno)) errores.alumno = 'Ese nombre es de una persona famosa. Escribí el nombre real del alumno.';

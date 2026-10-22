@@ -1,7 +1,7 @@
 // GET  /api/fusiones             -> historial (últimas 100)
 // POST /api/fusiones { deshacer } -> deshace una fusión y deja todo como estaba
 const { getPool, transaccion } = require('./_db');
-const { requireAdmin } = require('./_auth');
+const { requireAdmin, leerJson } = require('./_auth');
 const { idDe } = require('./_validar');
 
 const err = (http, msg) => Object.assign(new Error(msg), { http });
@@ -96,7 +96,9 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Método no permitido.' });
   }
 
-  const id = idDe(req.body?.deshacer);
+  const b = leerJson(req, res);
+  if (!b) return;
+  const id = idDe(b.deshacer);
   if (!id) return res.status(400).json({ error: 'Falta la fusión a deshacer.' });
 
   try {

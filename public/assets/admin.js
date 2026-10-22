@@ -25,6 +25,13 @@
   };
 
   try { state.pin = sessionStorage.getItem(PIN_KEY) || ''; } catch {}
+
+  // Logos: si no cargan, se quitan en lugar de mostrar el ícono de imagen rota
+  document.querySelectorAll('img[data-opcional]').forEach((img) => {
+    const quitar = () => img.remove();
+    if (img.complete && !img.naturalWidth) quitar();
+    else img.addEventListener('error', quitar);
+  });
   // Pares marcados como "no es repetido" en este dispositivo
   let ignorados = new Set();
   try { ignorados = new Set(JSON.parse(localStorage.getItem(IGN_KEY) || '[]')); } catch {}

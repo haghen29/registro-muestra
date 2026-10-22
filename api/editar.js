@@ -2,7 +2,7 @@
 //   { id, nombre, apellido, dni, conAlumno, alumno, parentesco }  -> corrige los datos
 //   { id, quitarAlerta: true }                                    -> "los datos están bien"
 const { getPool, leerVisitante } = require('./_db');
-const { requireAdmin, soloMetodo } = require('./_auth');
+const { requireAdmin, soloMetodo, leerJson } = require('./_auth');
 const { validarVisitante, idDe } = require('./_validar');
 const { analizar } = require('./_troll');
 
@@ -10,7 +10,8 @@ module.exports = async (req, res) => {
   if (!soloMetodo(req, res, 'POST')) return;
   if (!(await requireAdmin(req, res))) return;
 
-  const b = req.body || {};
+  const b = leerJson(req, res);
+  if (!b) return;
   const id = idDe(b.id);
   if (!id) return res.status(400).json({ error: 'Falta el id del visitante.' });
 

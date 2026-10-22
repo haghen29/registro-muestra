@@ -1,4 +1,5 @@
 .pin-input { font-size: 1.6rem; letter-spacing: .3em; text-align: center; }
+.h1-panel { min-height: 0; }
 
 /* ---------- Barra superior fija ---------- */
 .topbar {

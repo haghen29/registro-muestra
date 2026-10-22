@@ -9,6 +9,13 @@
   const STORAGE_KEY = 'tec4_muestra_registro';
   const VIGENCIA_MS = 12 * 60 * 60 * 1000; // el pase se mantiene 12 h en este celular
 
+  // Logos: si no cargan, se quitan en lugar de mostrar el ícono de imagen rota
+  document.querySelectorAll('img[data-opcional]').forEach((img) => {
+    const quitar = () => img.remove();
+    if (img.complete && !img.naturalWidth) quitar();
+    else img.addEventListener('error', quitar);
+  });
+
   /* ---------- Título tipo máquina de escribir (como el sitio de la escuela) ---------- */
   const typed = $('#typed');
   const texto = 'Muestra educativa';

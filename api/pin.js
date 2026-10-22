@@ -2,13 +2,15 @@
 // Cambia el PIN del panel. Hace falta el PIN actual (en el header y en el cuerpo).
 // Después del cambio, los demás dispositivos tienen que entrar con el PIN nuevo.
 const { getPool } = require('./_db');
-const { requireAdmin, soloMetodo, esPinValido, cifrar, coincide, pinGuardado } = require('./_auth');
+const { requireAdmin, soloMetodo, leerJson, esPinValido, cifrar, coincide, pinGuardado } = require('./_auth');
 
 module.exports = async (req, res) => {
   if (!soloMetodo(req, res, 'POST')) return;
   if (!(await requireAdmin(req, res))) return;
 
-  const { actual, nuevo } = req.body || {};
+  const b = leerJson(req, res);
+  if (!b) return;
+  const { actual, nuevo } = b;
   if (!esPinValido(nuevo)) {
     return res.status(400).json({ error: 'El PIN nuevo tiene que tener entre 4 y 8 números, sin letras, espacios ni símbolos.', errores: { nuevo: 'Solo números, de 4 a 8 cifras.' } });
   }

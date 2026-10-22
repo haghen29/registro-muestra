@@ -2,15 +2,17 @@
 // Marca (o deshace) el ingreso. Si dos recepcionistas marcan a la misma
 // persona, el segundo recibe 409 con la hora del primer ingreso.
 const { getPool, leerVisitante } = require('./_db');
-const { requireAdmin, soloMetodo } = require('./_auth');
+const { requireAdmin, soloMetodo, leerJson } = require('./_auth');
 const { idDe } = require('./_validar');
 
 module.exports = async (req, res) => {
   if (!soloMetodo(req, res, 'POST')) return;
   if (!(await requireAdmin(req, res))) return;
+  const b = leerJson(req, res);
+  if (!b) return;
 
-  const id = idDe(req.body?.id);
-  const ingresado = req.body?.ingresado;
+  const id = idDe(b.id);
+  const ingresado = b.ingresado;
   if (!id) return res.status(400).json({ error: 'Falta el id del visitante.' });
   if (typeof ingresado !== 'boolean') return res.status(400).json({ error: 'Falta indicar si ingresó (true o false).' });
 

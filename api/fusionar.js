@@ -14,7 +14,7 @@
 //
 // Todo queda en la tabla `fusiones` y se puede deshacer desde /api/fusiones.
 const { transaccion, leerVisitante } = require('./_db');
-const { requireAdmin, soloMetodo } = require('./_auth');
+const { requireAdmin, soloMetodo, leerJson } = require('./_auth');
 const { limpiar, norm, errorNombre, idDe } = require('./_validar');
 const { analizar } = require('./_troll');
 
@@ -84,10 +84,10 @@ async function fusionarAlumnos(db, b) {
   // Los nombres a unir solo se usan para buscar (comparados normalizados); el final se guarda y se valida
   const lista = Array.isArray(b.nombres) ? b.nombres.slice(0, 50) : [];
   const nombres = [...new Set(lista.map((n) => limpiar(n, 120)).filter(Boolean))];
-  const nombreFinal = limpiar(b.nombreFinal, 120);
+  const nombreFinal = limpiar(b.nombreFinal, 1000);
   if (nombres.length < 2) throw Object.assign(new Error('Elegí al menos dos alumnos para fusionar.'), { http: 400 });
   if (nombreFinal.length < 2) throw Object.assign(new Error('Escribí cómo se llama el alumno.'), { http: 400 });
-  const errFinal = errorNombre(nombreFinal, { campo: 'El nombre del alumno' });
+  const errFinal = errorNombre(nombreFinal, { max: 120, campo: 'El nombre del alumno' });
   if (errFinal) throw Object.assign(new Error(errFinal), { http: 400 });
 
   const claves = new Set(nombres.map(norm));
@@ -132,7 +132,8 @@ module.exports = async (req, res) => {
   if (!soloMetodo(req, res, 'POST')) return;
   if (!(await requireAdmin(req, res))) return;
 
-  const b = req.body || {};
+  const b = leerJson(req, res);
+  if (!b) return;
   try {
     const r = await transaccion((db) =>
       b.tipo === 'visitante' ? fusionarVisitantes(db, b)

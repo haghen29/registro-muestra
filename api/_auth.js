@@ -51,8 +51,12 @@ function verificar(pin, guardado) {
   return ok;
 }
 
+// IP del cliente para el bloqueo. En Vercel, x-vercel-forwarded-for y x-forwarded-for
+// los escribe la plataforma (pisa lo que mande el cliente), así que no se pueden falsificar
+// para esquivar el bloqueo. En la compu (vercel dev) sí se podrían: es solo para probar.
 function ipDe(req) {
-  const fwd = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
+  const h = req.headers['x-vercel-forwarded-for'] || req.headers['x-forwarded-for'] || '';
+  const fwd = String(h).split(',')[0].trim();
   return (fwd || req.socket?.remoteAddress || 'desconocida').slice(0, 45);
 }
 
@@ -99,6 +103,16 @@ async function requireAdmin(req, res) {
   }
 }
 
+// Lee el cuerpo JSON del pedido sin romperse: si no es JSON válido o no es un objeto
+// ({...}), responde 400 y devuelve null. (Leer req.body con JSON roto lanza un error.)
+function leerJson(req, res) {
+  let b;
+  try { b = req.body; } catch { b = undefined; }
+  if (b && typeof b === 'object' && !Array.isArray(b)) return b;
+  res.status(400).json({ error: 'El pedido tiene que ser un objeto JSON válido.' });
+  return null;
+}
+
 // Corta el pedido si el método HTTP no es el esperado.
 function soloMetodo(req, res, metodo) {
   if (req.method === metodo) return true;
@@ -107,4 +121,4 @@ function soloMetodo(req, res, metodo) {
   return false;
 }
 
-module.exports = { requireAdmin, soloMetodo, esPinValido, cifrar, coincide, pinGuardado };
+module.exports = { requireAdmin, soloMetodo, leerJson, esPinValido, cifrar, coincide, pinGuardado };

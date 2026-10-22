@@ -1,4 +1,7 @@
-# registro-muestra
+# Registro de visitantes · Muestra Educativa E.E.S.T. N°4 Berazategui
+
+> **Versión para la Técnica: `v1.0-colegio`.** Es la versión que se instala en la escuela para la Muestra Educativa. Código: https://github.com/haghen29/registro-muestra (etiqueta `v1.0-colegio`).
+
 ## Sobre este proyecto
 
 ### El problema
@@ -7,31 +10,29 @@ La E.E.S.T. N°4 de Berazategui organiza una Muestra Educativa abierta a la comu
 ### La solución
 Una aplicación web que digitaliza todo el ingreso:
 
-- **El visitante se registra solo.** Escanea un código QR con su celular, completa un formulario corto (nombre, apellido, DNI y a qué alumno viene a ver) y recibe una pantalla de confirmación para mostrar en la puerta. No tiene que instalar nada.
+- **El visitante se registra solo.** Escanea un código QR con su celular, completa un formulario corto (nombre, apellido, DNI y a qué alumno viene a ver, con su año y división) y recibe una pantalla de confirmación para mostrar en la puerta. No tiene que instalar nada.
 - **La recepción ve todo en tiempo real.** Los alumnos a cargo de la puerta usan un panel desde una tablet, un celular o una notebook. Cada registro nuevo aparece al instante, se encuentra en segundos por apellido o DNI, y con un toque se marca que la persona ya ingresó. Si dos recepcionistas trabajan a la vez, ven lo mismo y se evita que alguien entre dos veces.
-- **Los datos quedan ordenados.** El sistema agrupa a los familiares por alumno y detecta inconsistencias: personas anotadas dos veces, nombres de alumnos escritos de distintas formas o registros de broma. La recepción las corrige o las une sin perder información, y cualquier cambio se puede deshacer.
+- **Los datos quedan ordenados.** El sistema agrupa a los familiares por alumno y por curso, y detecta inconsistencias: personas anotadas dos veces, nombres de alumnos escritos de distintas formas o registros de broma. La recepción las corrige o las une sin perder información, y cualquier cambio se puede deshacer.
 
 ### Por qué está pensada así
 - **Primero el celular:** casi todos los visitantes llegan con uno, así que el formulario está diseñado para pantallas chicas.
 - **Pensada para usarse al aire libre:** colores de alto contraste y botones grandes, para leer bien con sol y operar rápido.
-- **Sin fricción para el visitante:** el registro lleva menos de un minuto, y el control de registros sospechosos funciona en segundo plano, sin bloquear a nadie.
-- **Dos versiones:** una completa con el módulo de inconsistencias y una simple solo con registro y control de ingreso, según lo que necesite cada evento.
+- **Sin fricción para el visitante:** el registro lleva menos de un minuto. Solo se rechazan los datos claramente falsos (nombres con números o de famosos). El resto de los controles funciona en segundo plano: marca lo sospechoso para que la recepción lo revise, sin bloquear a nadie.
 
-### Resultado
-Un ingreso más rápido y ordenado, menos trabajo manual para los recepcionistas y un registro digital de quién asistió y a quién vino a ver, listo para consultar después del evento.
+### Qué incluye esta versión
+- Formulario público con QR y pantalla verde de confirmación.
+- Panel de recepción en vivo con PIN: búsqueda, marcar ingreso, editar y eliminar.
+- Año y división del alumno, y pestaña **Alumnos** con una pestaña por curso que muestra el grupo de personas que vino a ver a cada alumno.
+- Pestaña **Inconsistencias**: repetidos, alumnos escritos distinto y registros sospechosos, con fusiones, historial y deshacer.
+- Bloqueo de nombres con números y de nombres de famosos.
+- Cartel del QR para imprimir, con los logos de la Técnica y de la agrupación Atahualpa Yupanqui.
 
 ### Tecnología (resumen)
 Aplicación web con HTML, CSS y JavaScript, servidor en Node.js y base de datos MariaDB. Funciona en cualquier navegador y no necesita que nadie instale una app.
 
 ---
 
-# Registro de visitantes · Muestra Educativa E.E.S.T. N°4 Berazategui
-
-Aplicación web para registrar a los visitantes de la Muestra Educativa y controlar el ingreso en la puerta.
-
-> Hay una **versión simple** en la carpeta `registro-muestra-tec4-simple`: la misma app sin el módulo de inconsistencias (no detecta repetidos ni registros sospechosos, no fusiona). Usa la misma base de datos y corre en el puerto 3001.
->
-> Hay una **versión para InfinityFree** en la carpeta `registro-muestra-tec4-infinityfree`: esta misma app con la API reescrita en PHP, para hostings que no corren Node.js. Los pasos para subirla están en su `LEEME.md`.
+## Cómo funciona
 
 - El **visitante** escanea un QR, completa sus datos en el celular y muestra una pantalla verde en la entrada.
 - Los **recepcionistas** ven los registros en vivo, buscan por apellido, DNI o alumno, marcan el ingreso, corrigen datos, eliminan registros y revisan las inconsistencias (repetidos y datos sospechosos).
@@ -67,7 +68,7 @@ Aplicación web para registrar a los visitantes de la Muestra Educativa y contro
 |---|---|---|
 | XAMPP | Trae MariaDB (en el panel figura como "MySQL") | apachefriends.org |
 | Node.js 18 o superior | Correr la API | nodejs.org (versión LTS) |
-| Git | Subir el código a GitHub | git-scm.com |
+| Git | Bajar el código desde GitHub | git-scm.com |
 | Cuenta de Vercel | Publicar la app | vercel.com (entrás con GitHub) |
 
 No hace falta phpMyAdmin: todo se hace desde la consola (ver [la diferencia con phpMyAdmin](#103-diferencia-con-php-y-phpmyadmin)).
@@ -76,7 +77,19 @@ No hace falta phpMyAdmin: todo se hace desde la consola (ver [la diferencia con 
 
 ## 2. Instalación en Windows con XAMPP
 
-En los comandos, cambiá `C:\xampp` por la carpeta donde instalaste XAMPP (por ejemplo `C:\Users\ASUS\Prog\Xampp`) y la ruta del proyecto por la tuya.
+Sirve para probar la app en una compu antes de publicarla. En los comandos, cambiá `C:\xampp` por la carpeta donde instalaste XAMPP y `C:/xampp/htdocs/registro-muestra` por la carpeta donde quedó el proyecto.
+
+### 2.0 Bajar el código
+
+Bajá esta versión desde GitHub dentro de `htdocs`:
+
+```powershell
+cd C:\xampp\htdocs
+git clone --branch v1.0-colegio https://github.com/haghen29/registro-muestra.git
+cd registro-muestra
+```
+
+Sin Git: en la página del repositorio elegí la etiqueta `v1.0-colegio`, tocá **Code → Download ZIP** y descomprimilo en `htdocs`.
 
 ### 2.1 Arrancar MariaDB
 
@@ -96,7 +109,7 @@ En XAMPP, root no tiene contraseña por defecto. Si te la pide, agregá `-p`.
 Dentro de la consola (`MariaDB [(none)]>`), ejecutá el script. Usá barras `/` en la ruta:
 
 ```sql
-source C:/Users/ASUS/Prog/Xampp/htdocs/registro-muestra-tec4/schema.sql
+source C:/xampp/htdocs/registro-muestra/schema.sql
 ```
 
 Crea la base `muestra_tec4` con tres tablas: `visitantes`, `fusiones` y `alumno_alias`.
@@ -156,7 +169,7 @@ La primera vez, `vercel dev` te pide iniciar sesión y te hace unas preguntas:
 | Pregunta | Respuesta |
 |---|---|
 | Which project? | **Create a new project** |
-| Project name | `registro-muestra-tec4` |
+| Project name | `registro-muestra` |
 | In which directory is your code located? | `./` |
 | Want to modify these settings? | `N` |
 
@@ -172,7 +185,9 @@ Para cortar el servidor: `Ctrl + C`. Mientras probás, MySQL tiene que estar en 
 
 ## 3. Actualizar una base creada con la versión anterior
 
-Si ya habías ejecutado el `schema.sql` de la primera versión, **no lo vuelvas a ejecutar**: usá la migración, que agrega lo nuevo sin borrar registros.
+**En una instalación nueva en la escuela, salteá esta sección:** el `schema.sql` del paso 2.2 ya crea la base completa.
+
+Solo si ya había una base creada con una versión anterior de la app, **no vuelvas a ejecutar `schema.sql`**: usá las migraciones, que agregan lo nuevo sin borrar registros.
 
 ```powershell
 cd C:\xampp\mysql\bin
@@ -180,7 +195,7 @@ cd C:\xampp\mysql\bin
 ```
 
 ```sql
-source C:/Users/ASUS/Prog/Xampp/htdocs/registro-muestra-tec4/migracion-v2.sql
+source C:/xampp/htdocs/registro-muestra/migracion-v2.sql
 ```
 
 Agrega las columnas `alerta`, `eliminado` y `fusionado_en`, crea las tablas `fusiones` y `alumno_alias` y le da al usuario `muestra_user@localhost` permisos sobre toda la base. Se puede ejecutar más de una vez sin problema.
@@ -188,7 +203,7 @@ Agrega las columnas `alerta`, `eliminado` y `fusionado_en`, crea las tablas `fus
 Después (o si tu base ya era de la versión 2), ejecutá también:
 
 ```sql
-source C:/Users/ASUS/Prog/Xampp/htdocs/registro-muestra-tec4/migracion-v3.sql
+source C:/xampp/htdocs/registro-muestra/migracion-v3.sql
 ```
 
 Agrega las columnas `curso` y `division` (año y división del alumno al que vienen a ver). Los registros viejos quedan sin curso hasta que alguien los edite.
@@ -243,7 +258,7 @@ Si no eran la misma persona, tocá **No es la misma** y esa sugerencia deja de a
 
 Cada familiar escribe el nombre del alumno a mano, así que el mismo chico puede aparecer como "Tomás Fernández", "Tomas Fernandez" y "tomi fernandez".
 
-1. La pestaña **Alumnos** muestra el grupo de personas que vino a ver a cada alumno (parentesco, DNI y si ya ingresaron), separado por curso. Arriba hay un filtro para ver un solo curso. Desde la lista de visitantes, tocar "Madre de Tomás…" lleva directo al grupo de ese alumno. Las mayúsculas y las tildes se ignoran solas.
+1. La pestaña **Alumnos** muestra el grupo de personas que vino a ver a cada alumno (parentesco, DNI y si ya ingresaron), separado por curso. Arriba hay una pestaña por curso ("Todos", "1° 1ª", "7° 2ª"…) con la cantidad de personas de cada uno. Desde la lista de visitantes, tocar "Madre de Tomás…" lleva directo al grupo de ese alumno. Las mayúsculas y las tildes se ignoran solas.
 2. Los posibles repetidos aparecen en **Inconsistencias → Alumno escrito distinto**. Tocá **Revisar**, o usá **Fusionar alumnos a mano** y marcá los que son el mismo.
 3. Elegí cómo se escribe bien el nombre (o escribilo en **Otro**). Abajo ves la lista de **familiares que lo van a acompañar** después de fusionar.
 4. Tocá **Fusionar alumnos**. Todos esos familiares quedan agrupados bajo el mismo alumno.
@@ -299,10 +314,10 @@ El archivo `api/_troll.js` revisa cada registro y marca los sospechosos como **A
 
 ### 6.1 La base tiene que estar en internet
 
-La MariaDB de XAMPP está en tu PC y **Vercel no puede conectarse a ella**. Para la versión publicada, la base tiene que estar en un servidor accesible desde afuera. Opciones:
+La MariaDB de XAMPP está en una PC y **Vercel no puede conectarse a ella**. Para la versión publicada, la base tiene que estar en un servidor accesible desde afuera. Opciones:
 
-- **Servidor de la escuela (tec4.ar):** instalar MariaDB, ejecutar `schema.sql`, crear el usuario con host `'%'` en lugar de `'localhost'`, cambiar `bind-address` a `0.0.0.0` en la configuración de MariaDB y abrir el puerto 3306 en el firewall (pfSense).
-- **Base gratuita en la nube** (Aiven, Railway, etc.): crear una base MySQL, ejecutar `schema.sql` desde HeidiSQL, DBeaver o la consola, y usar `DB_SSL=true` si el proveedor lo pide.
+- **Servidor de la escuela (tec4.ar), la opción prevista:** instalar MariaDB, ejecutar `schema.sql`, crear el usuario con host `'%'` en lugar de `'localhost'`, cambiar `bind-address` a `0.0.0.0` en la configuración de MariaDB y abrir el puerto 3306 en el firewall (pfSense). Conviene permitir en el firewall solo las conexiones que hacen falta y usar una contraseña larga para `muestra_user`.
+- **Base gratuita en la nube** (Aiven, Railway, etc.), si el servidor de la escuela no está disponible: crear una base MySQL, ejecutar `schema.sql` desde HeidiSQL, DBeaver o la consola, y usar `DB_SSL=true` si el proveedor lo pide.
 
 Con la base remota, el usuario se crea así:
 
@@ -314,22 +329,19 @@ FLUSH PRIVILEGES;
 
 Nunca uses `root` en Vercel.
 
-### 6.2 Subir el código a GitHub
+### 6.2 El código
 
-En github.com creá un repositorio **privado** llamado `registro-muestra-tec4` (sin README). Después, en la carpeta del proyecto:
+El código ya está en GitHub: https://github.com/haghen29/registro-muestra. La versión para la escuela es la etiqueta `v1.0-colegio`. Para subir cambios después:
 
 ```powershell
-git init
-git add .
-git commit -m "Registro muestra educativa"
-git branch -M main
-git remote add origin https://github.com/TU_USUARIO/registro-muestra-tec4.git
-git push -u origin main
+git add -A
+git commit -m "Qué cambiaste"
+git push
 ```
 
 ### 6.3 Crear el proyecto en Vercel
 
-1. En vercel.com → **Add New → Project** → importá el repositorio.
+1. En vercel.com → **Add New → Project** → importá el repositorio `registro-muestra`. Para publicar exactamente esta versión, la rama `main` tiene que estar en `v1.0-colegio`, sin cambios posteriores.
 2. **Framework Preset:** `Other`. No toques Build Command ni Output Directory.
 3. En **Environment Variables**, cargá:
 
@@ -397,6 +409,7 @@ Para separar registros fusionados no uses SQL: usá **Deshacer** en el historial
 | `Access denied for user 'muestra_user'` | Contraseña distinta a la del `.env`, o falta el `GRANT` | Revisá `DB_PASSWORD` y repetí el `GRANT` como root |
 | El formulario dice "No se pudo guardar el registro" | La API no llega a la base | Revisá el `.env` (local) o las variables y los **Logs** del proyecto en Vercel |
 | En el panel: "No se pudo fusionar" o error al abrir el historial | Falta la migración o los permisos sobre las tablas nuevas | Ejecutá `migracion-v2.sql` como root |
+| "No se pudo guardar el registro" justo después de actualizar | La base no tiene las columnas `curso` y `division` | Ejecutá `migracion-v3.sql` como root |
 | `PIN incorrecto` | El PIN no coincide con `ADMIN_PIN` | Revisá el `.env`; en Vercel, Redeploy después de cambiarlo |
 | `vercel dev` falla mencionando **esbuild** | npm no ejecutó un script de instalación | `npm approve-scripts esbuild`, después `npm i -g vercel` y otra vez `vercel dev` |
 | Los íconos se ven como palabras (`edit`, `search`) | Sin internet para cargar la fuente de íconos | Se arregla solo con conexión; no afecta el funcionamiento |

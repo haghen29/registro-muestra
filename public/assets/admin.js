@@ -91,8 +91,8 @@
       headers: { 'Content-Type': 'application/json', 'x-admin-pin': state.pin },
     });
     const data = await r.json().catch(() => ({}));
-    if (r.status === 401) {
-      cerrar('PIN incorrecto. Probá de nuevo.');
+    if (r.status === 401 || r.status === 429) {
+      cerrar(r.status === 429 ? data.error : 'PIN incorrecto. Probá de nuevo.');
       const e = new Error('auth'); e.auth = true; throw e;
     }
     return { status: r.status, data };
@@ -104,10 +104,20 @@
   }
 
   /* ================= Login ================= */
+  // PIN: solo números, de 4 a 8 cifras (lo mismo exige el servidor)
+  const PIN_OK = /^\d{4,8}$/;
+  const soloNumeros = (input) => input.addEventListener('input', () => { input.value = input.value.replace(/\D/g, '').slice(0, 8); });
+  soloNumeros($('#pin'));
+
   $('#login').addEventListener('submit', (e) => {
     e.preventDefault();
-    const pin = $('#pin').value.trim();
-    if (!pin) return;
+    const pin = $('#pin').value;
+    if (!PIN_OK.test(pin)) {
+      const err = $('#login-error');
+      err.textContent = 'El PIN es solo de números, de 4 a 8 cifras.';
+      err.hidden = false;
+      return;
+    }
     state.pin = pin;
     abrir();
   });
@@ -659,10 +669,12 @@
     if (e.target.name === 'conAlumno') mostrarAlumnoBox();
   });
   fEd.dni.addEventListener('input', () => { fEd.dni.value = fEd.dni.value.replace(/\D/g, ''); });
-  // Nombres: no se pueden escribir números
-  for (const campo of [fEd.nombre, fEd.apellido, fEd.alumno]) {
-    campo.addEventListener('input', () => { campo.value = campo.value.replace(/\d/g, ''); });
-  }
+  // Nombres: solo letras (con tildes, ñ y ü) y espacios. El servidor revisa lo mismo.
+  const soloLetras = (input) => input.addEventListener('input', () => {
+    const limpio = input.value.normalize('NFC').replace(/[^A-Za-zÀ-ÖØ-öø-ÿ ]/g, '').replace(/ {2,}/g, ' ').replace(/^ /, '');
+    if (limpio !== input.value) input.value = limpio;
+  });
+  [fEd.nombre, fEd.apellido, fEd.alumno, $('#fa-otro')].forEach(soloLetras);
 
   fEd.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -968,6 +980,45 @@
       poll(); // trae de vuelta los registros separados
     } catch (err) { errorDeRed(err); }
   }
+
+  /* ================= Cambiar PIN ================= */
+  const fPin = $('#f-pin');
+  [fPin.actual, fPin.nuevo, fPin.repetir].forEach(soloNumeros);
+
+  $('#btn-pin').addEventListener('click', () => {
+    fPin.reset();
+    erroresEn(fPin);
+    mostrarError('#pin-error', '');
+    $('#dlg-pin').showModal();
+    fPin.actual.focus();
+  });
+
+  fPin.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const actual = fPin.actual.value, nuevo = fPin.nuevo.value, repetir = fPin.repetir.value;
+    const errores = {};
+    if (!PIN_OK.test(actual)) errores.actual = 'Escribí el PIN actual.';
+    if (!PIN_OK.test(nuevo)) errores.nuevo = 'Solo números, de 4 a 8 cifras.';
+    else if (nuevo === actual) errores.nuevo = 'Tiene que ser distinto del actual.';
+    if (!errores.nuevo && repetir !== nuevo) errores.repetir = 'No coincide con el PIN nuevo.';
+    erroresEn(fPin, errores);
+    if (Object.keys(errores).length) return mostrarError('#pin-error', '');
+
+    const btn = $('#pin-guardar');
+    btn.disabled = true;
+    try {
+      const { status, data } = await post('/api/pin', { actual, nuevo });
+      if (status !== 200) {
+        erroresEn(fPin, data.errores);
+        return mostrarError('#pin-error', data.error || 'No se pudo cambiar el PIN.');
+      }
+      // Este dispositivo sigue adentro con el PIN nuevo
+      state.pin = nuevo;
+      try { sessionStorage.setItem(PIN_KEY, nuevo); } catch {}
+      $('#dlg-pin').close();
+      toast('PIN cambiado. Pasales el nuevo a los demás recepcionistas.');
+    } catch (err) { errorDeRed(err); } finally { btn.disabled = false; }
+  });
 
   /* ================= Barra fija ================= */
   function medirTopbar() {

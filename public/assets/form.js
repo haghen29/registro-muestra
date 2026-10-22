@@ -43,10 +43,13 @@
     if (limpio !== form.dni.value) form.dni.value = limpio;
   });
 
-  // Nombres: no se pueden escribir números
+  // Nombres: solo letras (con tildes, ñ y ü) y espacios. Números y símbolos no se pueden escribir.
+  // El servidor vuelve a revisar lo mismo, por si alguien manda datos sin usar este formulario.
+  const NO_LETRA = /[^A-Za-zÀ-ÖØ-öø-ÿ ]/g;
+  const SOLO_LETRAS = /^[A-Za-zÀ-ÖØ-öø-ÿ]+( [A-Za-zÀ-ÖØ-öø-ÿ]+)*$/;
   for (const campo of [form.nombre, form.apellido, form.alumno]) {
     campo.addEventListener('input', () => {
-      const limpio = campo.value.replace(/\d/g, '');
+      const limpio = campo.value.normalize('NFC').replace(NO_LETRA, '').replace(/ {2,}/g, ' ').replace(/^ /, '');
       if (limpio !== campo.value) campo.value = limpio;
     });
   }
@@ -83,14 +86,14 @@
   function validar(d) {
     const e = {};
     if (d.nombre.length < 2) e.nombre = 'Escribí tu nombre.';
-    else if (/\d/.test(d.nombre)) e.nombre = 'El nombre no puede tener números.';
+    else if (!SOLO_LETRAS.test(d.nombre)) e.nombre = 'El nombre solo puede tener letras y espacios.';
     if (d.apellido.length < 2) e.apellido = 'Escribí tu apellido.';
-    else if (/\d/.test(d.apellido)) e.apellido = 'El apellido no puede tener números.';
+    else if (!SOLO_LETRAS.test(d.apellido)) e.apellido = 'El apellido solo puede tener letras y espacios.';
     if (!/^\d{7,8}$/.test(d.dni)) e.dni = 'El DNI tiene que tener 7 u 8 números.';
     if (d.conAlumno === null) e.conAlumno = 'Elegí Sí o No.';
     if (d.conAlumno) {
       if (d.alumno.length < 2) e.alumno = 'Escribí el nombre del alumno.';
-      else if (/\d/.test(d.alumno)) e.alumno = 'El nombre del alumno no puede tener números.';
+      else if (!SOLO_LETRAS.test(d.alumno)) e.alumno = 'El nombre del alumno solo puede tener letras y espacios.';
       if (!d.curso) e.curso = 'Elegí el año.';
       if (!d.division) e.division = 'Elegí la división.';
       if (!d.parentesco) e.parentesco = 'Elegí el parentesco.';

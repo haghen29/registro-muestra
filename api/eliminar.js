@@ -4,13 +4,14 @@
 // Si la persona se vuelve a registrar con el mismo DNI, el registro se reactiva.
 const { getPool } = require('./_db');
 const { requireAdmin, soloMetodo } = require('./_auth');
+const { idDe } = require('./_validar');
 
 module.exports = async (req, res) => {
   if (!soloMetodo(req, res, 'POST')) return;
-  if (!requireAdmin(req, res)) return;
+  if (!(await requireAdmin(req, res))) return;
 
-  const id = Number(req.body?.id);
-  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'Falta el id del visitante.' });
+  const id = idDe(req.body?.id);
+  if (!id) return res.status(400).json({ error: 'Falta el id del visitante.' });
 
   try {
     const [r] = await getPool().execute(

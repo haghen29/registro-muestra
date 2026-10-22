@@ -9,7 +9,7 @@ const FORMATO_FECHA = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,6})?$/;
 
 module.exports = async (req, res) => {
   if (!soloMetodo(req, res, 'GET')) return;
-  if (!requireAdmin(req, res)) return;
+  if (!(await requireAdmin(req, res))) return;
 
   const since = typeof req.query.since === 'string' ? req.query.since : '';
   if (since && !FORMATO_FECHA.test(since)) {

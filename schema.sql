@@ -1,6 +1,6 @@
 -- Base de datos de la Muestra Educativa - E.E.S.T. N°4 Berazategui
 -- Instalación desde cero. Si ya tenías la base creada, no ejecutes este archivo:
--- usá migracion-v2.sql (si es de la versión 1) y después migracion-v3.sql.
+-- usá las migraciones que falten, en orden (migracion-v2.sql, v3 y v4).
 
 CREATE DATABASE IF NOT EXISTS muestra_tec4
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -50,6 +50,24 @@ CREATE TABLE IF NOT EXISTS alumno_alias (
   fusion_id  INT UNSIGNED NOT NULL,
   activo     TINYINT(1)   NOT NULL DEFAULT 1,
   PRIMARY KEY (alias_norm)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Ajustes de la app. Hoy guarda solo el PIN del panel, cifrado (nunca en texto).
+-- Si está vacía, el PIN es el de ADMIN_PIN (o 1111) hasta que el admin lo cambie.
+CREATE TABLE IF NOT EXISTS ajustes (
+  clave       VARCHAR(40)  NOT NULL,
+  valor       VARCHAR(255) NOT NULL,
+  updated_at  DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (clave)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Intentos fallidos de PIN por dirección IP (bloqueo temporal).
+CREATE TABLE IF NOT EXISTS intentos_pin (
+  ip              VARCHAR(45)  NOT NULL,
+  fallos          INT UNSIGNED NOT NULL DEFAULT 0,
+  bloqueado_hasta DATETIME(3)  NULL,
+  updated_at      DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+  PRIMARY KEY (ip)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Usuario de la app con permisos mínimos (no puede borrar nada).

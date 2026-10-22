@@ -3,16 +3,16 @@
 //   { id, quitarAlerta: true }                                    -> "los datos están bien"
 const { getPool, leerVisitante } = require('./_db');
 const { requireAdmin, soloMetodo } = require('./_auth');
-const { validarVisitante } = require('./_validar');
+const { validarVisitante, idDe } = require('./_validar');
 const { analizar } = require('./_troll');
 
 module.exports = async (req, res) => {
   if (!soloMetodo(req, res, 'POST')) return;
-  if (!requireAdmin(req, res)) return;
+  if (!(await requireAdmin(req, res))) return;
 
   const b = req.body || {};
-  const id = Number(b.id);
-  if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ error: 'Falta el id del visitante.' });
+  const id = idDe(b.id);
+  if (!id) return res.status(400).json({ error: 'Falta el id del visitante.' });
 
   const pool = getPool();
   try {

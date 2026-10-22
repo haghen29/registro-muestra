@@ -3,16 +3,16 @@
 // persona, el segundo recibe 409 con la hora del primer ingreso.
 const { getPool, leerVisitante } = require('./_db');
 const { requireAdmin, soloMetodo } = require('./_auth');
+const { idDe } = require('./_validar');
 
 module.exports = async (req, res) => {
   if (!soloMetodo(req, res, 'POST')) return;
-  if (!requireAdmin(req, res)) return;
+  if (!(await requireAdmin(req, res))) return;
 
-  const id = Number(req.body?.id);
-  const ingresado = req.body?.ingresado === true;
-  if (!Number.isInteger(id) || id <= 0) {
-    return res.status(400).json({ error: 'Falta el id del visitante.' });
-  }
+  const id = idDe(req.body?.id);
+  const ingresado = req.body?.ingresado;
+  if (!id) return res.status(400).json({ error: 'Falta el id del visitante.' });
+  if (typeof ingresado !== 'boolean') return res.status(400).json({ error: 'Falta indicar si ingresó (true o false).' });
 
   try {
     const pool = getPool();

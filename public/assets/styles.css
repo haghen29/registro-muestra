@@ -3,6 +3,8 @@
    Si querés calcar los colores exactos de tecnica4berazategui.edu.ar,
    cambiá solo estas variables. */
 :root {
+  /* Siempre en modo claro: el celular no la oscurece aunque tenga el modo oscuro activado */
+  color-scheme: light only;
   --navy: #0f2d52;
   --navy-2: #173f6e;
   --navy-3: #22578f;

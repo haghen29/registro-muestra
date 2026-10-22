@@ -112,7 +112,7 @@ Dentro de la consola (`MariaDB [(none)]>`), ejecutá el script. Usá barras `/` 
 source C:/xampp/htdocs/registro-muestra/schema.sql
 ```
 
-Crea la base `muestra_tec4` con tres tablas: `visitantes`, `fusiones` y `alumno_alias`.
+Crea la base `muestra_tec4` con cinco tablas: `visitantes`, `fusiones`, `alumno_alias`, `ajustes` e `intentos_pin`.
 
 ### 2.3 Crear el usuario de la app
 
@@ -135,7 +135,7 @@ Si te dice `ERROR 1396 ... CREATE USER failed`, el usuario ya existía. Ejecutá
 .\mysql.exe -u muestra_user -ptest1234 -e "SHOW TABLES FROM muestra_tec4;"
 ```
 
-Tienen que aparecer las tres tablas.
+Tienen que aparecer las cinco tablas.
 
 ### 2.5 Configurar las variables de entorno
 
@@ -148,7 +148,7 @@ DB_USER=muestra_user
 DB_PASSWORD=test1234
 DB_NAME=muestra_tec4
 DB_SSL=false
-ADMIN_PIN=4444
+ADMIN_PIN=1111
 DETECTOR_TROLL=on
 ```
 
@@ -176,7 +176,7 @@ La primera vez, `vercel dev` te pide iniciar sesión y te hace unas preguntas:
 Cuando diga `Ready! Available at http://localhost:3000`, abrí:
 
 - http://localhost:3000 → formulario
-- http://localhost:3000/admin → panel (PIN del `.env`)
+- http://localhost:3000/admin → panel (PIN inicial: **1111**)
 - http://localhost:3000/qr → cartel
 
 Para cortar el servidor: `Ctrl + C`. Mientras probás, MySQL tiene que estar en verde en XAMPP.
@@ -208,9 +208,27 @@ source C:/xampp/htdocs/registro-muestra/migracion-v3.sql
 
 Agrega las columnas `curso` y `division` (año y división del alumno al que vienen a ver). Los registros viejos quedan sin curso hasta que alguien los edite.
 
+Y por último:
+
+```sql
+source C:/xampp/htdocs/registro-muestra/migracion-v4.sql
+```
+
+Agrega las tablas `ajustes` (el PIN del panel, cifrado) e `intentos_pin` (bloqueo después de varios PIN incorrectos).
+
 ---
 
 ## 4. Cómo se usa el panel
+
+### Entrar y cambiar el PIN
+
+El PIN inicial es **1111** (el de `ADMIN_PIN` en el `.env` o en Vercel; si no está configurado, también es 1111). Es solo de números, de 4 a 8 cifras.
+
+Para cambiarlo, tocá la **llave** arriba a la derecha del panel, escribí el PIN actual y dos veces el nuevo. El PIN nuevo queda guardado **cifrado** en la base (tabla `ajustes`), así que vale para todos los dispositivos y sigue igual aunque se reinicie el servidor. Los demás recepcionistas tienen que volver a entrar con el PIN nuevo.
+
+- Después de **5 PIN incorrectos** seguidos desde la misma conexión, el panel queda bloqueado **2 minutos** para esa conexión. Así nadie puede adivinarlo probando todos los números.
+- Ojo: si todos los recepcionistas usan el mismo Wi-Fi, comparten la conexión. Si alguien se equivoca 5 veces, el bloqueo es para todos durante esos 2 minutos.
+- **Si se olvidan del PIN:** como root, ejecutá `DELETE FROM muestra_tec4.ajustes WHERE clave = 'admin_pin';`. El PIN vuelve a ser el de `ADMIN_PIN` (1111).
 
 ### Contadores y filtros
 
@@ -282,7 +300,8 @@ Al deshacer, todo vuelve a como estaba: los dos registros se separan con sus dat
 
 El formulario rechaza directamente (con un mensaje en el campo) estos casos:
 
-- **Números en el nombre, el apellido o el nombre del alumno.** En el celular ni siquiera se pueden escribir.
+- **Números o caracteres especiales en el nombre, el apellido o el nombre del alumno.** Solo se aceptan letras (con tildes, ñ y ü) y espacios: nada de números, signos, comillas, guiones, `<`, `>`, `;`, emojis ni otros alfabetos. En el formulario ni siquiera se pueden escribir. Un apellido como "D'Alessandro" se escribe "DAlessandro" o "D Alessandro".
+- **DNI con algo que no sean números** (se aceptan puntos de separación, como `30.123.456`).
 - **Nombres de famosos**, argentinos e internacionales: deportistas, músicos, actores, políticos, streamers y personajes ("Lionel Messi", "Taylor Swift", "Bob Esponja"…), también en el nombre del alumno. La lista está en `api/_famosos.js`. Se detecta aunque cambien el orden o agreguen segundos nombres ("Messi Lionel Andrés").
 - Si viene a ver a un alumno, **falta el año o la división**.
 
@@ -307,6 +326,29 @@ El archivo `api/_troll.js` revisa cada registro y marca los sospechosos como **A
 **Agregar casos:** sumá palabras a las listas `NOMBRES_CHISTE`, `PALABRAS` o `BROMA` de `api/_troll.js` (en minúsculas y sin tildes). Para números del DNI, usá `NUMEROS_FEOS` (de 4 cifras o más; los más cortos marcarían a mucha gente real). Si se empiezan a emitir DNIs de 70 millones, ajustá `DNI_SIN_EMITIR`.
 
 **Apagarlo:** poné `DETECTOR_TROLL=off` en el `.env` (o en las variables de Vercel).
+
+### Seguridad de los datos que entran
+
+Todo lo que llega a la API se revisa en el servidor, aunque el formulario ya lo haya revisado (alguien podría mandar datos sin usar el formulario):
+
+| Dato | Qué se acepta | Dónde |
+|---|---|---|
+| Nombre, apellido, alumno | Solo letras latinas (con tildes, ñ, ü) y espacios; 2 a 80 caracteres (120 el alumno); tiene que ser texto | `api/_validar.js` |
+| DNI | 7 u 8 números (puntos o espacios de separación opcionales) | `api/_validar.js` |
+| ¿Viene a ver a un alumno? | Solo `true` o `false` (no el texto `"true"`) | `api/_validar.js` |
+| Año, división | Enteros de 1 a 7 y de 1 a 6 | `api/_validar.js` |
+| Parentesco | Solo una de las opciones de la lista | `api/_validar.js` |
+| Ids de registros y fusiones | Enteros positivos | `idDe` en `api/_validar.js` |
+| PIN | 4 a 8 números; se compara cifrado y en tiempo constante | `api/_auth.js` |
+| `?since=` del panel | Fecha con formato exacto | `api/visitantes.js` |
+
+Lo que no cumple se **rechaza con error 400** y no se guarda; no se "arregla" en silencio. Además:
+
+- **Inyección SQL:** todas las consultas usan parámetros (`?`); ningún dato del usuario se pega al texto del SQL.
+- **XSS:** el navegador muestra los datos siempre con `textContent`, nunca como HTML.
+- **PIN:** guardado con `scrypt` y sal aleatoria (nunca en texto), comparado con `timingSafeEqual` y con bloqueo por intentos fallidos.
+- **Permisos de la base:** el usuario de la app solo tiene `SELECT`, `INSERT` y `UPDATE`. No puede borrar tablas ni filas.
+- **Cabeceras HTTP** (`vercel.json`): `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` (no se puede meter la app dentro de otra página), `Referrer-Policy` y `Permissions-Policy`.
 
 ---
 
@@ -353,7 +395,7 @@ git push
 | `DB_PASSWORD` | la contraseña del usuario |
 | `DB_NAME` | `muestra_tec4` |
 | `DB_SSL` | `false` o `true` según el proveedor |
-| `ADMIN_PIN` | el PIN para los recepcionistas |
+| `ADMIN_PIN` | `1111` (PIN inicial; después se cambia desde el panel) |
 | `DETECTOR_TROLL` | `on` |
 
 4. **Deploy.** Si después cambiás una variable, hacé **Redeploy** para que la tome.
@@ -366,7 +408,7 @@ Si ya habías vinculado el proyecto con `vercel dev`, vas a ver el proyecto crea
 
 1. Abrí `https://TU-PROYECTO.vercel.app/qr`, revisá que la URL sea la correcta y tocá **Imprimir cartel**.
 2. Borrá los registros de prueba (ver [comandos SQL](#8-comandos-sql-útiles)).
-3. Pasale a cada recepcionista la dirección de `/admin` y el PIN. El PIN queda guardado mientras la pestaña esté abierta.
+3. **Cambiá el PIN 1111** desde la llave del panel y pasale a cada recepcionista la dirección de `/admin` y el PIN nuevo. El PIN queda guardado mientras la pestaña esté abierta.
 4. Probá un registro real desde un celular con datos móviles antes de abrir la puerta.
 
 ---
@@ -410,7 +452,9 @@ Para separar registros fusionados no uses SQL: usá **Deshacer** en el historial
 | El formulario dice "No se pudo guardar el registro" | La API no llega a la base | Revisá el `.env` (local) o las variables y los **Logs** del proyecto en Vercel |
 | En el panel: "No se pudo fusionar" o error al abrir el historial | Falta la migración o los permisos sobre las tablas nuevas | Ejecutá `migracion-v2.sql` como root |
 | "No se pudo guardar el registro" justo después de actualizar | La base no tiene las columnas `curso` y `division` | Ejecutá `migracion-v3.sql` como root |
-| `PIN incorrecto` | El PIN no coincide con `ADMIN_PIN` | Revisá el `.env`; en Vercel, Redeploy después de cambiarlo |
+| `PIN incorrecto` | El PIN no es el guardado (si alguien lo cambió, ya no es 1111) | Preguntale al admin el PIN nuevo. Si nadie lo sabe, ver "Si se olvidan del PIN" en la sección 4 |
+| "Demasiados intentos con PIN incorrecto" | 5 PIN incorrectos seguidos desde esa conexión | Esperá 2 minutos y probá con el PIN correcto |
+| "No se pudo verificar el PIN" | Falta la migración v4 | Ejecutá `migracion-v4.sql` como root |
 | `vercel dev` falla mencionando **esbuild** | npm no ejecutó un script de instalación | `npm approve-scripts esbuild`, después `npm i -g vercel` y otra vez `vercel dev` |
 | Los íconos se ven como palabras (`edit`, `search`) | Sin internet para cargar la fuente de íconos | Se arregla solo con conexión; no afecta el funcionamiento |
 
@@ -505,7 +549,7 @@ Los archivos que empiezan con `_` no son endpoints: Vercel no los publica y solo
 ```
 api/
   _db.js             Conexión a MariaDB (pool de conexiones), transacciones y lectura de un visitante
-  _auth.js           Revisa el PIN del header x-admin-pin y el método HTTP (GET/POST)
+  _auth.js           PIN del panel: lo guarda cifrado (scrypt), lo verifica y bloquea tras 5 fallos; método HTTP
   _validar.js        Valida y limpia los datos del visitante (sirve al formulario y a la edición)
   _troll.js          Detector de registros sospechosos (ver sección 5)
   _famosos.js        Lista de famosos con los que no se puede registrar nadie (ver sección 5)
@@ -522,6 +566,7 @@ api/
 | `eliminar.js` | `POST /api/eliminar` | Panel | Oculta un registro. No lo borra de la base. |
 | `fusionar.js` | `POST /api/fusionar` | Panel | Fusiona dos visitantes, o varias formas de escribir un alumno, y guarda el estado anterior. |
 | `fusiones.js` | `GET/POST /api/fusiones` | Panel | Historial de fusiones y deshacer. |
+| `pin.js` | `POST /api/pin` | Panel | Cambia el PIN del panel (pide el actual). |
 
 Todos los endpoints del panel exigen el PIN. El formulario público solo puede crear registros.
 
@@ -531,6 +576,7 @@ Todos los endpoints del panel exigen el PIN. El formulario público solo puede c
 schema.sql           Crea la base desde cero: tablas visitantes, fusiones y alumno_alias
 migracion-v2.sql     Actualiza una base de la versión 1 sin borrar registros
 migracion-v3.sql     Agrega curso y división del alumno
+migracion-v4.sql     Agrega el PIN guardado en la base y el bloqueo por intentos fallidos
 .env / .env.example  Variables de entorno (el .env real no se sube a GitHub)
 vercel.json          Configuración de Vercel: carpeta public, URLs sin .html, sin caché en /api
 package.json         Nombre del proyecto, versión de Node y la dependencia mysql2

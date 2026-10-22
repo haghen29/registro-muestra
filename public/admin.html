@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light only">
   <meta name="theme-color" content="#0f2d52">
   <meta name="robots" content="noindex, nofollow">
   <title>Recepción · Muestra Educativa · E.E.S.T. N°4</title>
@@ -35,7 +36,7 @@
         <p class="form-error" id="login-error" role="alert" hidden></p>
         <div class="field">
           <label for="pin">PIN</label>
-          <input class="input pin-input" id="pin" type="password" inputmode="numeric" autocomplete="current-password" required>
+          <input class="input pin-input" id="pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="8" required>
         </div>
         <button class="btn btn-dark btn-block" type="submit" id="login-btn">
           <i class="ms" aria-hidden="true">lock_open</i><span>Abrir panel</span>
@@ -55,6 +56,9 @@
         </div>
         <button class="icon-btn" id="btn-historial" type="button" aria-label="Historial de fusiones" title="Historial de fusiones">
           <i class="ms" aria-hidden="true">history</i>
+        </button>
+        <button class="icon-btn" id="btn-pin" type="button" aria-label="Cambiar PIN" title="Cambiar PIN">
+          <i class="ms" aria-hidden="true">key</i>
         </button>
         <button class="icon-btn" id="logout" type="button" aria-label="Cerrar panel" title="Cerrar panel">
           <i class="ms" aria-hidden="true">logout</i>
@@ -198,6 +202,35 @@
       <footer class="dlg-foot">
         <button class="btn btn-dark btn-block" type="submit" id="ed-guardar"><i class="ms" aria-hidden="true">save</i>Guardar cambios</button>
         <button class="btn btn-danger-ghost btn-block" type="button" id="ed-eliminar"><i class="ms" aria-hidden="true">delete</i>Eliminar</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <!-- ===== Cambiar PIN ===== -->
+  <dialog class="dlg" id="dlg-pin" aria-labelledby="pin-title">
+    <form id="f-pin" novalidate>
+      <header class="dlg-head">
+        <h2 id="pin-title">Cambiar PIN</h2>
+        <button class="dlg-x" type="button" data-cerrar aria-label="Cerrar"><i class="ms" aria-hidden="true">close</i></button>
+      </header>
+      <div class="dlg-body">
+        <p class="dlg-sub">El PIN es solo de números, de 4 a 8 cifras. Al cambiarlo, los demás dispositivos tienen que volver a entrar con el PIN nuevo.</p>
+        <p class="form-error" id="pin-error" role="alert" hidden></p>
+        <div class="field" data-field="actual">
+          <label for="pin-actual">PIN actual</label>
+          <input class="input pin-input" id="pin-actual" name="actual" type="password" inputmode="numeric" autocomplete="current-password" maxlength="8">
+        </div>
+        <div class="field" data-field="nuevo">
+          <label for="pin-nuevo">PIN nuevo</label>
+          <input class="input pin-input" id="pin-nuevo" name="nuevo" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8">
+        </div>
+        <div class="field" data-field="repetir">
+          <label for="pin-repetir">Repetí el PIN nuevo</label>
+          <input class="input pin-input" id="pin-repetir" name="repetir" type="password" inputmode="numeric" autocomplete="new-password" maxlength="8">
+        </div>
+      </div>
+      <footer class="dlg-foot">
+        <button class="btn btn-dark btn-block" type="submit" id="pin-guardar"><i class="ms" aria-hidden="true">key</i>Cambiar PIN</button>
       </footer>
     </form>
   </dialog>

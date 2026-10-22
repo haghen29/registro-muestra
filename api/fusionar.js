@@ -15,16 +15,16 @@
 // Todo queda en la tabla `fusiones` y se puede deshacer desde /api/fusiones.
 const { transaccion, leerVisitante } = require('./_db');
 const { requireAdmin, soloMetodo } = require('./_auth');
-const { limpiar, norm } = require('./_validar');
+const { limpiar, norm, errorNombre, idDe } = require('./_validar');
 const { analizar } = require('./_troll');
 
 const COLS = 'id, nombre, apellido, dni, con_alumno, alumno_nombre, curso, division, parentesco, alerta, ingresado, ingreso_at, eliminado';
 
 async function fusionarVisitantes(db, b) {
-  const aId = Number(b.principalId);
-  const bId = Number(b.otroId);
-  const el = b.elegir || {};
-  if (!Number.isInteger(aId) || !Number.isInteger(bId) || aId === bId) {
+  const aId = idDe(b.principalId);
+  const bId = idDe(b.otroId);
+  const el = b.elegir && typeof b.elegir === 'object' ? b.elegir : {};
+  if (!aId || !bId || aId === bId) {
     throw Object.assign(new Error('Elegí dos registros distintos.'), { http: 400 });
   }
   for (const k of ['nombre', 'apellido', 'dni', 'visita']) {
@@ -81,10 +81,14 @@ async function fusionarVisitantes(db, b) {
 }
 
 async function fusionarAlumnos(db, b) {
-  const nombres = [...new Set((Array.isArray(b.nombres) ? b.nombres : []).map((n) => limpiar(n, 120)).filter(Boolean))];
+  // Los nombres a unir solo se usan para buscar (comparados normalizados); el final se guarda y se valida
+  const lista = Array.isArray(b.nombres) ? b.nombres.slice(0, 50) : [];
+  const nombres = [...new Set(lista.map((n) => limpiar(n, 120)).filter(Boolean))];
   const nombreFinal = limpiar(b.nombreFinal, 120);
   if (nombres.length < 2) throw Object.assign(new Error('Elegí al menos dos alumnos para fusionar.'), { http: 400 });
   if (nombreFinal.length < 2) throw Object.assign(new Error('Escribí cómo se llama el alumno.'), { http: 400 });
+  const errFinal = errorNombre(nombreFinal, { campo: 'El nombre del alumno' });
+  if (errFinal) throw Object.assign(new Error(errFinal), { http: 400 });
 
   const claves = new Set(nombres.map(norm));
   const [rows] = await db.query(
@@ -126,7 +130,7 @@ async function fusionarAlumnos(db, b) {
 
 module.exports = async (req, res) => {
   if (!soloMetodo(req, res, 'POST')) return;
-  if (!requireAdmin(req, res)) return;
+  if (!(await requireAdmin(req, res))) return;
 
   const b = req.body || {};
   try {

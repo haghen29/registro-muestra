@@ -134,7 +134,7 @@
     submitBtn.disabled = true;
     submitBtn.querySelector('span').textContent = 'Registrando…';
     try {
-      const r = await fetch('/api/registro', {
+      const r = await fetch('api/registro', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(datos),

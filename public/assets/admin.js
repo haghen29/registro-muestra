@@ -167,7 +167,7 @@
     if (!state.pin) return;
     try {
       const qs = state.cursor ? `?since=${encodeURIComponent(state.cursor)}` : '';
-      const { status, data } = await api(`/api/visitantes${qs}`);
+      const { status, data } = await api(`api/visitantes${qs}`);
       if (status !== 200) throw new Error(data.error || 'Error del servidor');
 
       if (state.primeraCarga) {
@@ -599,7 +599,7 @@
     state.enCurso.add(id);
     render();
     try {
-      const { status, data } = await post('/api/checkin', { id, ingresado: marcar });
+      const { status, data } = await post('api/checkin', { id, ingresado: marcar });
       if (data.visitante) state.items.set(id, data.visitante);
       if (status === 200) {
         toast(marcar ? `Ingreso marcado: ${v.apellido}, ${v.nombre}` : `Ingreso deshecho: ${v.apellido}, ${v.nombre}`);
@@ -702,7 +702,7 @@
     const btn = $('#ed-guardar');
     btn.disabled = true;
     try {
-      const { status, data } = await post('/api/editar', datos);
+      const { status, data } = await post('api/editar', datos);
       if (status !== 200) {
         erroresEn(fEd, data.errores);
         mostrarError('#ed-error', data.error || 'No se pudo guardar.');
@@ -717,7 +717,7 @@
 
   async function quitarAlerta(id) {
     try {
-      const { status, data } = await post('/api/editar', { id, quitarAlerta: true });
+      const { status, data } = await post('api/editar', { id, quitarAlerta: true });
       if (status !== 200) {
         if ($('#dlg-editar').open) mostrarError('#ed-error', data.error);
         else toast(data.error || 'No se pudo quitar el aviso.', { warn: true });
@@ -736,7 +736,7 @@
     const v = state.items.get(id);
     if (!v || !confirm(`¿Eliminar el registro de ${v.nombre} ${v.apellido} (DNI ${fmtDni(v.dni)})?\n\nSi la persona se vuelve a registrar con el mismo DNI, el registro vuelve.`)) return;
     try {
-      const { status, data } = await post('/api/eliminar', { id });
+      const { status, data } = await post('api/eliminar', { id });
       if (status !== 200 && status !== 404) return mostrarError('#ed-error', data.error);
       state.items.delete(id);
       $('#dlg-editar').close();
@@ -886,7 +886,7 @@
     const btn = $('#fv-ok');
     btn.disabled = true;
     try {
-      const { status, data } = await post('/api/fusionar', { tipo: 'visitante', principalId: aId, otroId: bId, elegir });
+      const { status, data } = await post('api/fusionar', { tipo: 'visitante', principalId: aId, otroId: bId, elegir });
       if (status !== 200) return mostrarError('#fv-error', data.error || 'No se pudo fusionar.');
       state.items.set(aId, data.visitante);
       state.items.delete(bId);
@@ -933,7 +933,7 @@
     const btn = $('#fa-ok');
     btn.disabled = true;
     try {
-      const { status, data } = await post('/api/fusionar', { tipo: 'alumno', nombres: [...state.fa.variantes.keys()], nombreFinal });
+      const { status, data } = await post('api/fusionar', { tipo: 'alumno', nombres: [...state.fa.variantes.keys()], nombreFinal });
       if (status !== 200) return mostrarError('#fa-error', data.error || 'No se pudo fusionar.');
       // Actualizar ya, sin esperar la próxima consulta
       for (const f of state.fa.familiares) {
@@ -958,7 +958,7 @@
     const ul = $('#hi-list');
     ul.replaceChildren(el('li', {}, 'Cargando…'));
     try {
-      const { status, data } = await api('/api/fusiones');
+      const { status, data } = await api('api/fusiones');
       if (status !== 200) throw new Error(data.error);
       ul.replaceChildren(...(data.fusiones.length ? data.fusiones.map((f) =>
         el('li', { class: f.deshechaMs ? 'undone' : '' },
@@ -983,7 +983,7 @@
 
   async function deshacerFusion(id) {
     try {
-      const { status, data } = await post('/api/fusiones', { deshacer: id });
+      const { status, data } = await post('api/fusiones', { deshacer: id });
       if (status !== 200) return toast(data.error || 'No se pudo deshacer.', { warn: true });
       toast(`Fusión deshecha. ${data.detalle}`);
       poll(); // trae de vuelta los registros separados
@@ -1016,7 +1016,7 @@
     const btn = $('#pin-guardar');
     btn.disabled = true;
     try {
-      const { status, data } = await post('/api/pin', { actual, nuevo });
+      const { status, data } = await post('api/pin', { actual, nuevo });
       if (status !== 200) {
         erroresEn(fPin, data.errores);
         return mostrarError('#pin-error', data.error || 'No se pudo cambiar el PIN.');

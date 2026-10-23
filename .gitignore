@@ -1,7 +1,14 @@
+# Datos reales del servidor (contraseñas): nunca al repositorio
+public/api/_config.local.php
+# Marca que deja la API cuando revisó las tablas de la base
+public/api/_esquema*.ok
+
+# Restos de la versión anterior en Node.js (si quedaron en la compu)
 node_modules
 .env
 .env.local
 .vercel
+
 # Configuración local de Claude Code: no se sube, salvo las skills del proyecto
 .claude/*
 !.claude/skills/

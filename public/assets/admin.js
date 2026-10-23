@@ -264,6 +264,7 @@
   function tipoParecido(x, y) {
     const nx = norm(`${x.nombre} ${x.apellido}`), ny = norm(`${y.nombre} ${y.apellido}`);
     if (nx === ny) return 'nombre';
+    if (x.dni === y.dni) return 'mismodni';
     if (lev(x.dni, y.dni) <= 1 && lev(norm(x.apellido), norm(y.apellido)) <= 1) return 'dni';
     if (Math.min(nx.length, ny.length) >= 6 && lev(nx, ny) <= 1) return 'casi';
     return null;
@@ -495,6 +496,7 @@
   const TIPOS_INC = [
     { k: 'nombre', icono: 'group', titulo: 'Mismo nombre y apellido', ayuda: 'Dos registros con el mismo nombre completo y distinto DNI.' },
     { k: 'casi', icono: 'spellcheck', titulo: 'Nombre casi igual', ayuda: 'El nombre completo cambia en una sola letra: puede ser un error de tipeo.' },
+    { k: 'mismodni', icono: 'badge', titulo: 'Mismo DNI, distinto nombre', ayuda: 'Se guardaron como personas distintas. Puede ser un DNI mal escrito o un nombre con error: pedí el DNI en la puerta.' },
     { k: 'dni', icono: 'pin', titulo: 'DNI casi igual', ayuda: 'Mismo apellido y el DNI cambia en un solo número.' },
     { k: 'alumno', icono: 'school', titulo: 'Alumno escrito distinto', ayuda: 'Distintos familiares escribieron al mismo alumno de otra forma.' },
     { k: 'alerta', icono: 'flag', titulo: 'A revisar', ayuda: 'El detector marcó estos datos como sospechosos. Pedile el DNI en la puerta.' },

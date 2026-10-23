@@ -216,6 +216,14 @@ source C:/xampp/htdocs/registro-muestra/migracion-v4.sql
 
 Agrega las tablas `ajustes` (el PIN del panel, cifrado) e `intentos_pin` (bloqueo después de varios PIN incorrectos).
 
+Y la última:
+
+```sql
+source C:/xampp/htdocs/registro-muestra/migracion-v5.sql
+```
+
+Hace que una persona sea **DNI + nombre + apellido** en lugar de solo el DNI (ver [Registros con el mismo DNI](#registros-con-el-mismo-dni)).
+
 ---
 
 ## 4. Cómo se usa el panel
@@ -244,8 +252,19 @@ Tocá **Marcar ingreso**. Si otro recepcionista ya lo había marcado, aparece un
 
 Tocá el lápiz al lado de cada registro:
 
-- **Guardar cambios:** corrige nombre, apellido, DNI o a quién viene a ver. Si el DNI nuevo ya lo tiene otra persona, te avisa y te sugiere fusionarlos desde **Inconsistencias**. Si cambiás "¿Viene a ver a un alumno?" a **No**, el alumno y el parentesco que había escrito quedan guardados: si fue sin querer, volvés a tocar **Sí** y reaparecen.
-- **Eliminar:** lo saca del panel en todos los dispositivos. Queda guardado en la base: si la persona se vuelve a registrar con el mismo DNI, el registro reaparece con los datos nuevos. Ver también [cómo recuperar uno a mano](#8-comandos-sql-útiles).
+- **Guardar cambios:** corrige nombre, apellido, DNI o a quién viene a ver. Si con el cambio queda igual (DNI, nombre y apellido) a otro registro, te avisa y te sugiere fusionarlos desde **Inconsistencias**. Si cambiás "¿Viene a ver a un alumno?" a **No**, el alumno y el parentesco que había escrito quedan guardados: si fue sin querer, volvés a tocar **Sí** y reaparecen.
+- **Eliminar:** lo saca del panel en todos los dispositivos. Queda guardado en la base: si la persona se vuelve a registrar con el mismo DNI, nombre y apellido, el registro reaparece con los datos nuevos. Ver también [cómo recuperar uno a mano](#8-comandos-sql-útiles).
+
+### Registros con el mismo DNI
+
+Una persona es la combinación **DNI + nombre + apellido** (sin distinguir mayúsculas ni tildes: "José Pérez" y "jose perez" son la misma).
+
+| Se registra con... | Qué pasa |
+|---|---|
+| El mismo DNI, nombre y apellido que alguien ya registrado | Es la misma persona: se le muestra **su entrada** (la pantalla verde con su número de registro). No se crea otro registro. |
+| El mismo DNI pero **otro** nombre o apellido | Se guarda como **otra persona**, con su propia entrada. En el panel aparece en **Inconsistencias → Mismo DNI, distinto nombre** para que la recepción lo revise. |
+
+Para ver la entrada de alguien hay que saber su DNI, su nombre y su apellido, así que no se puede averiguar a quién pertenece un DNI probando números.
 
 ### Pestaña Inconsistencias
 
@@ -254,6 +273,7 @@ Todo lo que puede estar repetido o mal cargado aparece en la pestaña **Inconsis
 | Tipo | Qué detecta |
 |---|---|
 | Mismo nombre y apellido | Dos registros con el mismo nombre completo y distinto DNI |
+| Mismo DNI, distinto nombre | Dos personas registradas con el mismo DNI: puede ser un DNI mal escrito o un nombre con error |
 | Nombre casi igual | El nombre completo cambia en una sola letra (error de tipeo) |
 | DNI casi igual | Mismo apellido y el DNI cambia en un solo número |
 | Alumno escrito distinto | Distintos familiares escribieron al mismo alumno de otra forma |
@@ -348,7 +368,7 @@ Lo que no cumple se **rechaza con error 400** y no se guarda; no se "arregla" en
 - **XSS:** el navegador muestra los datos siempre con `textContent`, nunca como HTML. No hay `onclick=`, `onerror=` ni `<script>` dentro del HTML: todo el JavaScript está en `public/assets/`, así la CSP puede ser estricta.
 - **Cuerpo del pedido:** si no es un objeto JSON válido (texto suelto, JSON roto, un array), se responde 400. Antes, un JSON roto hacía caer el servidor local.
 - **Largo de los textos:** si un nombre supera el máximo, se rechaza; no se recorta en silencio.
-- **Privacidad del DNI:** si alguien se registra con un DNI que ya existe pero con otro nombre, recibe un error **sin ver los datos** de la persona registrada. Así no se puede averiguar a quién pertenece un DNI probando números. Si el nombre coincide, vuelve a ver su propio pase.
+- **Privacidad del DNI:** si alguien se registra con un DNI que ya existe pero con otro nombre, se crea un registro nuevo y solo ve **su propia** entrada, nunca los datos de la otra persona. Para volver a ver una entrada existente hay que coincidir en DNI, nombre y apellido. Así no se puede averiguar a quién pertenece un DNI probando números.
 - **Librería del QR:** `qrcode.js` 1.0.0 (licencia MIT) está copiada en `public/assets/vendor/`. No se carga código de otros sitios.
 - **PIN:** guardado con `scrypt` y sal aleatoria (nunca en texto), comparado con `timingSafeEqual` y con bloqueo por intentos fallidos.
 - **Permisos de la base:** el usuario de la app solo tiene `SELECT`, `INSERT` y `UPDATE`. No puede borrar tablas ni filas.
@@ -474,6 +494,7 @@ Para separar registros fusionados no uses SQL: usá **Deshacer** en el historial
 | `PIN incorrecto` | El PIN no es el guardado (si alguien lo cambió, ya no es 1111) | Preguntale al admin el PIN nuevo. Si nadie lo sabe, ver "Si se olvidan del PIN" en la sección 4 |
 | "Demasiados intentos con PIN incorrecto" | 5 PIN incorrectos seguidos desde esa conexión | Esperá 2 minutos y probá con el PIN correcto |
 | "No se pudo verificar el PIN" | Falta la migración v4 | Ejecutá `migracion-v4.sql` como root |
+| Alguien con el mismo DNI y otro nombre no se puede registrar | Falta la migración v5 (el DNI sigue siendo único) | Ejecutá `migracion-v5.sql` como root |
 | `vercel dev` falla mencionando **esbuild** | npm no ejecutó un script de instalación | `npm approve-scripts esbuild`, después `npm i -g vercel` y otra vez `vercel dev` |
 | Los íconos se ven como palabras (`edit`, `search`) | Sin internet para cargar la fuente de íconos | Se arregla solo con conexión; no afecta el funcionamiento |
 
@@ -600,6 +621,7 @@ schema.sql           Crea la base desde cero: tablas visitantes, fusiones y alum
 migracion-v2.sql     Actualiza una base de la versión 1 sin borrar registros
 migracion-v3.sql     Agrega curso y división del alumno
 migracion-v4.sql     Agrega el PIN guardado en la base y el bloqueo por intentos fallidos
+migracion-v5.sql     Una persona pasa a ser DNI + nombre + apellido (el mismo DNI puede repetirse)
 .env / .env.example  Variables de entorno (el .env real no se sube a GitHub)
 vercel.json          Configuración de Vercel: carpeta public, URLs sin .html, sin caché en /api
 package.json         Nombre del proyecto, versión de Node y la dependencia mysql2

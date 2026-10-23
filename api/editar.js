@@ -47,14 +47,15 @@ module.exports = async (req, res) => {
     return res.status(200).json({ ok: true, visitante: await leerVisitante(pool, id) });
   } catch (e) {
     if (e.code === 'ER_DUP_ENTRY') {
+      // Ya hay otro registro con el mismo DNI, nombre y apellido (es la misma persona dos veces)
       const [[otro]] = await pool.execute(
-        'SELECT id, apellido, nombre, eliminado FROM visitantes WHERE dni = ?',
-        [String(b.dni).replace(/\D/g, '')]
+        'SELECT id, eliminado FROM visitantes WHERE dni = ? AND nombre = ? AND apellido = ? AND id <> ?',
+        [String(b.dni).replace(/\D/g, ''), String(b.nombre).trim(), String(b.apellido).trim(), id]
       );
-      const quien = otro && !Number(otro.eliminado) ? ` (${otro.apellido}, ${otro.nombre})` : ' (un registro eliminado)';
+      const cual = otro && !Number(otro.eliminado) ? ` (#${String(otro.id).padStart(4, '0')})` : ' (un registro eliminado)';
       return res.status(409).json({
-        error: `Ese DNI ya lo tiene otro registro${quien}. Si es la misma persona, fusionalos desde Inconsistencias.`,
-        errores: { dni: 'Este DNI ya está en otro registro.' },
+        error: `Ya hay otro registro con ese DNI, nombre y apellido${cual}. Si es la misma persona, fusionalos desde Inconsistencias.`,
+        errores: { dni: 'Ya hay otro registro igual.' },
       });
     }
     console.error('editar', e);

@@ -42,7 +42,7 @@ Datos sensibles: **DNI y nombre de adultos, y nombre, año y división de alumno
 
 ## Privacidad y abuso
 
-- **No filtrar datos por el DNI:** si alguien se registra con un DNI que ya existe, solo se le muestra el pase si nombre y apellido coinciden. Si no, 409 sin datos.
+- **No filtrar datos por el DNI:** una persona es DNI + nombre + apellido. Solo se muestra una entrada existente si coinciden las tres cosas; con el mismo DNI y otro nombre se crea otra persona y se devuelve solo su propia entrada (nunca los datos del registro que ya tenía ese DNI). Esos casos se avisan en Inconsistencias, no se bloquean.
 - El público solo puede **crear** registros. Leer, editar, fusionar y eliminar exige PIN.
 - Nombres de famosos y de chiste: los evidentes se bloquean; los dudosos se marcan "A revisar" sin bloquear, porque hay apellidos reales que parecen chiste.
 - Considerar límite de registros por IP solo con un umbral alto, porque en el evento muchos visitantes comparten el Wi‑Fi de la escuela.
@@ -64,7 +64,7 @@ Datos sensibles: **DNI y nombre de adultos, y nombre, año y división de alumno
    - Tipos: `{"$ne": ""}`, `["Ana"]`, `true`, `null`, `"true"`, números negativos, `1e9`, `NaN`
    - Unicode: emojis, `Иван`, `An​a` (zero-width), letras con tilde descompuestas
    - Longitud: 0, 1 y 10.000 caracteres
-   - DNI: con letras, con `;`, 6 y 9 cifras, negativo, DNI de otra persona con otro nombre
+   - DNI: con letras, con `;`, 6 y 9 cifras, negativo, DNI de otra persona con otro nombre (tiene que crear otro registro sin mostrar los datos del primero)
    - PIN: vacío, con letras, `1111' OR 1=1`, 6 intentos fallidos seguidos
    - Y los válidos tienen que seguir pasando: "José María Ñuñez Müller", DNI `30.123.456`.
 4. **Buscar lo mismo en todos lados:** si un campo tenía un problema, revisar todos los campos parecidos (formulario, editor del panel, fusiones, cartel). Un fallo arreglado en un solo lugar es el error más común.
@@ -76,5 +76,5 @@ Datos sensibles: **DNI y nombre de adultos, y nombre, año y división de alumno
 - `api/_validar.js`: reglas de cada campo (`SOLO_LETRAS`, `idDe`, `enteroEn`, `validarVisitante`).
 - `api/_auth.js`: PIN (scrypt, bloqueo, `requireAdmin`). `api/pin.js`: cambio de PIN.
 - `api/_famosos.js` y `api/_troll.js`: bloqueo de famosos y marcas "A revisar".
-- `vercel.json`: cabeceras de seguridad. `migracion-v4.sql`: tablas `ajustes` e `intentos_pin`.
+- `vercel.json`: cabeceras de seguridad. `migracion-v4.sql`: tablas `ajustes` e `intentos_pin`. `migracion-v5.sql`: clave única DNI + nombre + apellido.
 - README, sección "Seguridad de los datos que entran": resumen para quien revise el código.

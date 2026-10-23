@@ -1,6 +1,6 @@
 -- Base de datos de la Muestra Educativa - E.E.S.T. N°4 Berazategui
 -- Instalación desde cero. Si ya tenías la base creada, no ejecutes este archivo:
--- usá las migraciones que falten, en orden (migracion-v2.sql, v3 y v4).
+-- usá las migraciones que falten, en orden (migracion-v2.sql, v3, v4 y v5).
 
 CREATE DATABASE IF NOT EXISTS muestra_tec4
   CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -25,7 +25,10 @@ CREATE TABLE IF NOT EXISTS visitantes (
   created_at    DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
   updated_at    DATETIME(3)  NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
   PRIMARY KEY (id),
-  UNIQUE KEY uq_dni (dni),
+  -- Una persona es DNI + nombre + apellido (sin distinguir mayúsculas ni tildes):
+  -- el mismo DNI con otro nombre se guarda como otra persona.
+  UNIQUE KEY uq_persona (dni, nombre, apellido),
+  KEY idx_dni (dni),
   KEY idx_apellido (apellido),
   KEY idx_updated (updated_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

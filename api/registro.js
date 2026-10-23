@@ -24,19 +24,22 @@ module.exports = async (req, res) => {
       }
       const alerta = analizar(d);
 
-      const [ex] = await db.execute('SELECT id, eliminado FROM visitantes WHERE dni = ? FOR UPDATE', [d.dni]);
+      // Una persona es DNI + nombre + apellido. Con el mismo DNI puede haber varias personas
+      // (por ejemplo, alguien que se equivocó al escribirlo): se busca la que coincide en todo.
+      const [conEseDni] = await db.execute(
+        'SELECT id, nombre, apellido, eliminado FROM visitantes WHERE dni = ? FOR UPDATE',
+        [d.dni]
+      );
+      const misma = conEseDni.find((r) => norm(r.nombre) === norm(d.nombre) && norm(r.apellido) === norm(d.apellido));
 
-      if (ex.length && !Number(ex[0].eliminado)) {
-        // Ese DNI ya está registrado. Solo se devuelve el pase si el nombre y el apellido
-        // coinciden: si no, cualquiera podría escribir un DNI ajeno y ver los datos de otra persona.
-        const previo = await leerVisitante(db, ex[0].id);
-        const mismaPersona = norm(previo.nombre) === norm(d.nombre) && norm(previo.apellido) === norm(d.apellido);
-        if (!mismaPersona) throw Object.assign(new Error('dni-ajeno'), { dniAjeno: true });
-        return { duplicado: true, visitante: previo };
+      if (misma && !Number(misma.eliminado)) {
+        // Mismo DNI, nombre y apellido: es la misma persona, se le vuelve a mostrar su entrada.
+        // (Hace falta saber las tres cosas, así que no sirve para averiguar datos de otros.)
+        return { duplicado: true, visitante: await leerVisitante(db, misma.id) };
       }
 
-      if (ex.length) {
-        // Había un registro eliminado con ese DNI: lo reactivamos con los datos nuevos
+      if (misma) {
+        // Esa persona se había eliminado: se reactiva con los datos nuevos
         await db.execute(
           `UPDATE visitantes
               SET nombre = ?, apellido = ?, con_alumno = ?, alumno_nombre = ?, curso = ?, division = ?,
@@ -44,10 +47,12 @@ module.exports = async (req, res) => {
                   ingresado = 0, ingreso_at = NULL, eliminado = 0, fusionado_en = NULL,
                   created_at = NOW(3)
             WHERE id = ?`,
-          [d.nombre, d.apellido, d.conAlumno ? 1 : 0, d.alumno, d.curso, d.division, d.parentesco, alerta, ex[0].id]
+          [d.nombre, d.apellido, d.conAlumno ? 1 : 0, d.alumno, d.curso, d.division, d.parentesco, alerta, misma.id]
         );
-        return { duplicado: false, visitante: await leerVisitante(db, ex[0].id) };
+        return { duplicado: false, visitante: await leerVisitante(db, misma.id) };
       }
+      // Si el DNI ya existe pero con otro nombre, se guarda como otra persona (el panel lo
+      // muestra en Inconsistencias → "Mismo DNI, distinto nombre" para que lo revisen).
 
       const [r] = await db.execute(
         `INSERT INTO visitantes (nombre, apellido, dni, con_alumno, alumno_nombre, curso, division, parentesco, alerta)
@@ -63,14 +68,9 @@ module.exports = async (req, res) => {
       .status(resultado.duplicado ? 200 : 201)
       .json({ ok: true, duplicado: resultado.duplicado, visitante });
   } catch (e) {
-    if (e.dniAjeno) {
-      return res.status(409).json({
-        error: 'Ese DNI ya está registrado con otro nombre. Revisá el DNI o acercate a la recepción.',
-        errores: { dni: 'Este DNI ya está registrado con otro nombre.' },
-      });
-    }
     if (e.code === 'ER_DUP_ENTRY') {
-      return res.status(409).json({ error: 'Ese DNI se acaba de registrar. Tocá Registrarme otra vez.' });
+      // Dos registros iguales al mismo tiempo (doble toque): el segundo choca con la clave única
+      return res.status(409).json({ error: 'Esta persona se acaba de registrar. Tocá Registrarme otra vez para ver la entrada.' });
     }
     console.error('registro', e);
     return res.status(500).json({ error: 'No se pudo guardar el registro. Probá de nuevo en unos segundos.' });

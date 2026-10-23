@@ -203,8 +203,9 @@
   function agregarPase(v) {
     const p = limpiarPase(v);
     if (!p) return;
-    // Si ese DNI (o ese registro) ya estaba en la lista, se actualiza en su lugar en vez de duplicarse
-    const i = lista.pases.findIndex((x) => x.id === p.id || x.dni === p.dni);
+    // Si ese registro ya estaba en la lista (misma persona: mismo DNI, nombre y apellido), se
+    // actualiza en su lugar. Mismo DNI con otro nombre es otra persona y se agrega aparte.
+    const i = lista.pases.findIndex((x) => x.id === p.id);
     let aviso = '';
     if (i >= 0) {
       lista.pases[i] = p;

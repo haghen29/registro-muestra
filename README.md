@@ -44,9 +44,6 @@ Aplicación web con HTML, CSS y JavaScript, servidor en Node.js y base de datos 
 | https://muestra.tec4.ar/qr | Organización | Cartel A4 para imprimir con el QR, que apunta a https://muestra.tec4.ar |
 
 **Tecnologías:** HTML, CSS y JavaScript puro · funciones serverless en Node.js (Vercel) · MariaDB. No usa PHP. Ver [Cómo está hecho](#10-cómo-está-hecho).
-
-> **Versión para hostings con PHP (InfinityFree):** en la carpeta [`infinityfree/`](infinityfree/) está la misma app con la API reescrita en PHP, para servidores que no corren Node.js. Tiene las mismas funciones y las mismas reglas de seguridad. Los pasos para subirla están en [`infinityfree/LEEME.md`](infinityfree/LEEME.md). Su `api/_config.php` es de ejemplo: los datos reales de la base se completan antes de subir y **no se suben a GitHub**.
-
 ---
 
 ## Índice

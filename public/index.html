@@ -32,6 +32,9 @@
 
     <div class="sheet">
       <form id="form" class="card" novalidate>
+        <button class="volver-pases" id="volver-pases" type="button" hidden>
+          <i class="ms" aria-hidden="true">badge</i><span id="volver-pases-txt">Ver mis pases</span><i class="ms" aria-hidden="true">chevron_right</i>
+        </button>
         <h2>Tus datos</h2>
         <p class="hint">Al terminar, mostrale la pantalla verde al alumno de la puerta.</p>
 
@@ -116,33 +119,43 @@
   </main>
 
   <!-- ===== Pase de ingreso ===== -->
-  <section id="view-pass" class="pass" hidden aria-live="polite">
+  <section id="view-pass" class="pass" hidden>
     <div class="pass-inner">
       <div class="brand">
         <img src="https://tecnica4berazategui.edu.ar/img/LogoTec4Blanco.png" alt="Logo E.E.S.T. N°4" data-opcional>
         <span class="brand-name">Muestra Educativa<br>E.E.S.T. N°4</span>
       </div>
 
-      <div class="pass-check"><i class="ms" aria-hidden="true">check</i></div>
-      <h1 class="pass-title">Registrado</h1>
-      <p class="pass-sub">Mostrá esta pantalla en la puerta.</p>
-
-      <p class="pass-dup" id="pass-dup" hidden>Este DNI ya estaba registrado. Estos son tus datos.</p>
-
-      <div class="pass-ticket">
-        <p class="pass-name" id="pass-name"></p>
-        <dl class="pass-grid">
-          <div><dt>DNI</dt><dd id="pass-dni" class="pass-num"></dd></div>
-          <div><dt>Registro</dt><dd id="pass-id" class="pass-num"></dd></div>
-          <div class="wide"><dt>Visita</dt><dd id="pass-tipo"></dd></div>
-          <div><dt>Hora</dt><dd id="pass-hora" class="pass-num"></dd></div>
-        </dl>
+      <!-- Tilde chica y, a la derecha, cuántas personas hay registradas desde este celular -->
+      <div class="pass-head">
+        <div class="pass-check"><i class="ms" aria-hidden="true">check</i></div>
+        <p class="pass-count" id="pass-count" aria-hidden="true" hidden></p>
+        <h1 class="pass-title" id="pass-title">Registrado</h1>
       </div>
+      <p class="pass-sub" id="pass-sub">Mostrá esta pantalla en la puerta.</p>
+
+      <p class="pass-aviso" id="pass-aviso" role="status" hidden></p>
+
+      <!-- Nombres de todas las personas: tocar uno muestra su pase (solo si hay más de una) -->
+      <div class="pass-chips" id="pass-chips" role="tablist" aria-label="Personas registradas desde este celular" hidden></div>
+
+      <!-- Un pase por persona. Con más de una, se deslizan de costado y se asoma el siguiente -->
+      <div class="pass-track" id="pass-track" tabindex="-1"></div>
+
+      <div class="pass-nav" id="pass-nav" hidden>
+        <button class="pass-arrow" id="pass-prev" type="button" aria-label="Persona anterior"><i class="ms" aria-hidden="true">chevron_left</i></button>
+        <div class="pass-dots" id="pass-dots" aria-hidden="true"></div>
+        <button class="pass-arrow" id="pass-next" type="button" aria-label="Persona siguiente"><i class="ms" aria-hidden="true">chevron_right</i></button>
+      </div>
+      <p class="pass-hint" id="pass-hint" hidden></p>
+      <p class="sr-only" id="pass-live" aria-live="polite"></p>
 
       <div class="pass-actions">
         <button class="btn btn-ghost-light btn-block" id="otra" type="button">
           <i class="ms" aria-hidden="true">person_add</i>Registrar a otra persona
         </button>
+        <p class="pass-limite" id="pass-limite" hidden></p>
+        <button class="pass-link" id="pass-reset" type="button" hidden>Empezar de nuevo en este celular</button>
       </div>
     </div>
   </section>

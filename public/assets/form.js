@@ -6,8 +6,11 @@
   const alumnoBox = $('#alumno-box');
   const submitBtn = $('#submit');
   const formError = $('#form-error');
-  const STORAGE_KEY = 'tec4_muestra_registro';
-  const VIGENCIA_MS = 12 * 60 * 60 * 1000; // el pase se mantiene 12 h en este celular
+  // Pases de todas las personas registradas desde este celular (solo en el navegador, no en el servidor)
+  const STORAGE_KEY = 'tec4_muestra_pases';
+  const STORAGE_VIEJO = 'tec4_muestra_registro'; // versión anterior: guardaba un solo pase
+  const VIGENCIA_MS = 12 * 60 * 60 * 1000;       // la lista dura 12 h desde el último registro
+  const MAX_PASES = 10;
 
   // Logos: si no cargan, se quitan en lugar de mostrar el ícono de imagen rota
   document.querySelectorAll('img[data-opcional]').forEach((img) => {
@@ -141,9 +144,7 @@
         if (data.errores) mostrarErrores(data.errores);
         throw new Error(data.error || 'No se pudo registrar.');
       }
-      const pase = { ...data.visitante, duplicado: data.duplicado, guardado: Date.now() };
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(pase)); } catch {}
-      mostrarPase(pase);
+      agregarPase({ ...data.visitante, duplicado: data.duplicado });
     } catch (err) {
       formError.textContent = navigator.onLine
         ? err.message
@@ -156,38 +157,288 @@
     }
   });
 
-  /* ---------- Pase ---------- */
+  /* ---------- Pases guardados en este celular ---------- */
+  // { pases: [...], actual: índice que se está mirando, actualizado: ms del último registro, pista: ya se mostró la animación }
+  let lista = { pases: [], actual: 0, actualizado: 0, pista: false };
+
+  // Solo los datos que muestra el pase. Lo que venga de localStorage se revisa: alguien pudo haberlo tocado.
+  function limpiarPase(v) {
+    if (!v || typeof v !== 'object' || !Number.isInteger(v.id) || typeof v.nombre !== 'string' || typeof v.dni !== 'string') return null;
+    const txt = (x) => (typeof x === 'string' ? x.slice(0, 120) : null);
+    const num = (x) => (Number.isInteger(x) ? x : null);
+    return {
+      id: v.id, nombre: txt(v.nombre), apellido: txt(v.apellido) || '', dni: v.dni.replace(/\D/g, '').slice(0, 8),
+      conAlumno: v.conAlumno === true, alumno: txt(v.alumno), curso: num(v.curso), division: num(v.division),
+      parentesco: txt(v.parentesco), createdMs: num(v.createdMs), duplicado: v.duplicado === true,
+    };
+  }
+
+  function guardar() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(lista)); } catch {}
+  }
+
+  function cargar() {
+    try {
+      const g = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      if (g && Array.isArray(g.pases) && Date.now() - g.actualizado < VIGENCIA_MS) {
+        const pases = g.pases.map(limpiarPase).filter(Boolean).slice(-MAX_PASES);
+        if (pases.length) {
+          lista = { pases, actual: Math.min(Math.max(0, g.actual | 0), pases.length - 1), actualizado: g.actualizado, pista: g.pista === true };
+          return;
+        }
+      }
+      // El pase que haya dejado la versión anterior (uno solo) pasa a ser el primero de la lista
+      const viejo = JSON.parse(localStorage.getItem(STORAGE_VIEJO) || 'null');
+      localStorage.removeItem(STORAGE_VIEJO);
+      const p = limpiarPase(viejo);
+      if (p && Date.now() - viejo.guardado < VIGENCIA_MS) {
+        lista = { pases: [p], actual: 0, actualizado: viejo.guardado, pista: false };
+        guardar();
+      } else if (g) {
+        localStorage.removeItem(STORAGE_KEY); // vencida
+      }
+    } catch {}
+  }
+
+  function agregarPase(v) {
+    const p = limpiarPase(v);
+    if (!p) return;
+    // Si ese DNI (o ese registro) ya estaba en la lista, se actualiza en su lugar en vez de duplicarse
+    const i = lista.pases.findIndex((x) => x.id === p.id || x.dni === p.dni);
+    let aviso = '';
+    if (i >= 0) {
+      lista.pases[i] = p;
+      lista.actual = i;
+    } else {
+      lista.pases.push(p);
+      if (lista.pases.length > MAX_PASES) lista.pases.shift();
+      lista.actual = lista.pases.length - 1;
+      if (lista.pases.length > 1) aviso = `${primerNombre(p)} agregado · ya son ${lista.pases.length}. Deslizá para ver a todos.`;
+    }
+    lista.actualizado = Date.now();
+    guardar();
+    mostrarPases({ aviso });
+  }
+
+  /* ---------- Pantalla verde ---------- */
   const fmtDni = (dni) => Number(dni).toLocaleString('es-AR');
   const fmtHora = (ms) => new Date(ms).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  const primerNombre = (v) => v.nombre.split(' ')[0];
+  const sinMovimiento = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const track = $('#pass-track');
+  let avisoTimer;
 
-  function mostrarPase(v) {
-    $('#pass-name').textContent = `${v.nombre} ${v.apellido}`;
-    $('#pass-dni').textContent = fmtDni(v.dni);
-    $('#pass-id').textContent = `#${String(v.id).padStart(4, '0')}`;
-    const curso = v.curso ? ` (${v.curso}° ${v.division}ª)` : '';
-    $('#pass-tipo').textContent = v.conAlumno ? `${v.parentesco} de ${v.alumno}${curso}` : 'Invitado general';
-    $('#pass-hora').textContent = v.createdMs ? fmtHora(v.createdMs) : '';
-    $('#pass-dup').hidden = !v.duplicado;
+  function el(tag, cls, texto) {
+    const n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (texto != null) n.textContent = texto;
+    return n;
+  }
+
+  // Nombre corto para los chips; si dos se llaman igual, se agrega la inicial del apellido
+  function nombresCortos() {
+    const nombres = lista.pases.map(primerNombre);
+    return lista.pases.map((v, i) =>
+      nombres.filter((n) => n === nombres[i]).length > 1 && v.apellido ? `${nombres[i]} ${v.apellido[0]}.` : nombres[i]);
+  }
+
+  function tarjeta(v, i, n) {
+    const t = el('article', 'pass-ticket');
+    t.setAttribute('role', 'group');
+    t.setAttribute('aria-roledescription', 'pase');
+    t.setAttribute('aria-label', n > 1 ? `Persona ${i + 1} de ${n}: ${v.nombre} ${v.apellido}` : `${v.nombre} ${v.apellido}`);
+    if (n > 1) t.append(el('span', 'pass-badge', `${i + 1} de ${n}`));
+    if (v.duplicado) t.append(el('p', 'pass-dup', 'Este DNI ya estaba registrado. Estos son los datos.'));
+    t.append(el('p', 'pass-name', `${v.nombre} ${v.apellido}`));
+    const curso = v.curso && v.division ? ` (${v.curso}° ${v.division}ª)` : '';
+    const dl = el('dl', 'pass-grid');
+    const dato = (dt, dd, cls) => {
+      const d = el('div', cls);
+      d.append(el('dt', null, dt), el('dd', dt === 'Visita' ? null : 'pass-num', dd));
+      dl.append(d);
+    };
+    dato('DNI', fmtDni(v.dni));
+    dato('Registro', `#${String(v.id).padStart(4, '0')}`);
+    dato('Visita', v.conAlumno ? `${v.parentesco} de ${v.alumno}${curso}` : 'Invitado general', 'wide');
+    dato('Hora', v.createdMs ? fmtHora(v.createdMs) : '');
+    t.append(dl);
+    if (n > 1) {
+      const q = el('button', 'pass-quitar', 'Quitar de este celular');
+      q.type = 'button';
+      q.dataset.quitar = String(i);
+      t.append(q);
+    }
+    return t;
+  }
+
+  function mostrarPases({ aviso = '' } = {}) {
+    const n = lista.pases.length;
+    if (!n) return mostrarFormulario();
+    const varios = n > 1;
+
+    // Con varias personas: "3" grande al lado de la tilde y "personas registradas" al costado
+    $('#pass-count').textContent = String(n);
+    $('#pass-count').hidden = !varios;
+    $('.pass-head').classList.toggle('varios', varios);
+    $('#pass-title').textContent = varios ? 'personas registradas' : 'Registrado';
+    $('#pass-title').setAttribute('aria-label', varios ? `${n} personas registradas` : 'Registrado');
+    $('#pass-sub').textContent = varios ? 'Mostrá cada pase en la puerta.' : 'Mostrá esta pantalla en la puerta.';
+
+    track.classList.toggle('varios', varios);
+    track.replaceChildren(...lista.pases.map((v, i) => tarjeta(v, i, n)));
+    if (varios) {
+      track.setAttribute('role', 'region');
+      track.setAttribute('aria-roledescription', 'carrusel');
+      track.setAttribute('aria-label', 'Pases de las personas registradas. Deslizá para ver cada uno.');
+      track.tabIndex = 0;
+    } else {
+      ['role', 'aria-roledescription', 'aria-label'].forEach((a) => track.removeAttribute(a));
+      track.tabIndex = -1;
+    }
+
+    const cortos = nombresCortos();
+    $('#pass-chips').replaceChildren(...cortos.map((nombre, i) => {
+      const c = el('button', 'pass-chip', nombre);
+      c.type = 'button';
+      c.setAttribute('role', 'tab');
+      c.dataset.ir = String(i);
+      return c;
+    }));
+    $('#pass-dots').replaceChildren(...lista.pases.map(() => el('span')));
+    $('#pass-chips').hidden = !varios;
+    $('#pass-nav').hidden = !varios;
+    $('#pass-hint').hidden = !varios;
+
+    const lleno = n >= MAX_PASES;
+    $('#otra').disabled = lleno;
+    $('#pass-limite').hidden = !lleno;
+    $('#pass-limite').textContent = `Ya hay ${MAX_PASES} personas en este celular. Para registrar a más, usá otro celular.`;
+    $('#pass-reset').hidden = !varios;
+
+    const a = $('#pass-aviso');
+    clearTimeout(avisoTimer);
+    a.textContent = aviso;
+    a.hidden = !aviso;
+    if (aviso) avisoTimer = setTimeout(() => (a.hidden = true), 6000);
+
     viewForm.hidden = true;
     viewPass.hidden = false;
     document.querySelector('meta[name="theme-color"]').content = '#14773f';
     window.scrollTo(0, 0);
+
+    // Ir al pase actual sin animación y actualizar chips, puntos y textos
+    requestAnimationFrame(() => {
+      irA(lista.actual, false);
+      marcar(lista.actual);
+      if (varios && !lista.pista && !sinMovimiento) insinuar();
+    });
   }
 
-  $('#otra').addEventListener('click', () => {
+  function irA(i, suave = true) {
+    const card = track.children[i];
+    if (!card) return;
+    track.scrollTo({ left: card.offsetLeft - track.firstElementChild.offsetLeft, behavior: suave && !sinMovimiento ? 'smooth' : 'auto' });
+  }
+
+  // Actualiza todo lo que indica en qué persona estás
+  function marcar(i) {
+    const n = lista.pases.length;
+    if (i !== lista.actual) { lista.actual = i; guardar(); }
+    $('#pass-chips').querySelectorAll('.pass-chip').forEach((c, k) => {
+      c.setAttribute('aria-selected', String(k === i));
+      if (k === i) c.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    });
+    $('#pass-dots').querySelectorAll('span').forEach((d, k) => d.classList.toggle('on', k === i));
+    $('#pass-prev').disabled = i === 0;
+    $('#pass-next').disabled = i === n - 1;
+
+    if (n > 1) {
+      const cortos = nombresCortos();
+      const siguen = cortos.slice(i + 1);
+      const lista2 = (xs) => (xs.length <= 2 ? xs.join(' y ') : `${xs.slice(0, 2).join(', ')} y ${xs.length - 2} más`);
+      $('#pass-hint').textContent = siguen.length
+        ? `Deslizá → para ver a ${lista2(siguen)}`
+        : `← Deslizá para volver a ${cortos[0]}`;
+      const v = lista.pases[i];
+      $('#pass-live').textContent = `Persona ${i + 1} de ${n}: ${v.nombre} ${v.apellido}`;
+    }
+  }
+
+  // La primera vez que hay varios pases, la card se corre un poco y vuelve: muestra que se puede deslizar
+  function insinuar() {
+    lista.pista = true;
+    guardar();
+    const desde = track.scrollLeft;
+    const hacia = lista.actual < lista.pases.length - 1 ? desde + 60 : desde - 60;
+    setTimeout(() => {
+      track.scrollTo({ left: hacia, behavior: 'smooth' });
+      setTimeout(() => track.scrollTo({ left: desde, behavior: 'smooth' }), 450);
+    }, 700);
+  }
+
+  // Al deslizar con el dedo: detectar qué card quedó a la vista
+  let scrollTimer;
+  track.addEventListener('scroll', () => {
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(() => {
+      const base = track.firstElementChild?.offsetLeft || 0;
+      let mejor = 0;
+      [...track.children].forEach((c, k) => {
+        if (Math.abs(c.offsetLeft - base - track.scrollLeft) < Math.abs(track.children[mejor].offsetLeft - base - track.scrollLeft)) mejor = k;
+      });
+      if (lista.pases.length > 1) marcar(mejor);
+    }, 80);
+  }, { passive: true });
+
+  $('#pass-prev').addEventListener('click', () => irA(lista.actual - 1));
+  $('#pass-next').addEventListener('click', () => irA(lista.actual + 1));
+  $('#pass-chips').addEventListener('click', (e) => {
+    const c = e.target.closest('[data-ir]');
+    if (c) irA(Number(c.dataset.ir));
+  });
+  track.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') { e.preventDefault(); irA(Math.min(lista.actual + 1, lista.pases.length - 1)); }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); irA(Math.max(lista.actual - 1, 0)); }
+  });
+
+  track.addEventListener('click', (e) => {
+    const q = e.target.closest('[data-quitar]');
+    if (!q) return;
+    const i = Number(q.dataset.quitar);
+    const v = lista.pases[i];
+    if (!v || !confirm(`¿Quitar a ${v.nombre} ${v.apellido} de este celular?\n\nEl registro sigue anotado en la muestra; solo deja de verse acá.`)) return;
+    lista.pases.splice(i, 1);
+    lista.actual = Math.min(i, lista.pases.length - 1);
+    guardar();
+    mostrarPases();
+  });
+
+  $('#pass-reset').addEventListener('click', () => {
+    const n = lista.pases.length;
+    if (!confirm(`¿Borrar los ${n} pases de este celular?\n\nLos registros siguen anotados en la muestra; solo dejan de verse acá.`)) return;
+    lista = { pases: [], actual: 0, actualizado: 0, pista: false };
     try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    mostrarFormulario();
+  });
+
+  /* ---------- Volver al formulario ---------- */
+  function mostrarFormulario() {
     form.reset();
     actualizarAlumno();
+    const n = lista.pases.length;
+    $('#volver-pases').hidden = !n;
+    $('#volver-pases-txt').textContent = n === 1 ? 'Ver mi pase' : `Ver los ${n} pases de este celular`;
     viewPass.hidden = true;
     viewForm.hidden = false;
     document.querySelector('meta[name="theme-color"]').content = '#0f2d52';
     window.scrollTo(0, 0);
-    form.nombre.focus();
-  });
+    if (n) form.nombre.focus({ preventScroll: true });
+  }
 
-  // Si recargan la página, el pase sigue visible
-  try {
-    const guardado = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    if (guardado && Date.now() - guardado.guardado < VIGENCIA_MS) mostrarPase(guardado);
-  } catch {}
+  $('#otra').addEventListener('click', mostrarFormulario);
+  $('#volver-pases').addEventListener('click', () => mostrarPases());
+
+  // Si recargan la página, los pases siguen visibles
+  cargar();
+  if (lista.pases.length) mostrarPases();
 })();

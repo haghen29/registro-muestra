@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es-AR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light only">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Cartel QR · Muestra Educativa · E.E.S.T. N°4</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100..125,400..800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/styles.css">
+  <link rel="stylesheet" href="assets/qr.css">
+</head>
+<body>
+  <div class="tools">
+    <input class="input" id="url" type="url" inputmode="url" maxlength="200" aria-label="Dirección del formulario">
+    <button class="btn btn-dark" id="gen" type="button">Actualizar QR</button>
+    <button class="btn btn-primary" id="imprimir" type="button">Imprimir cartel</button>
+    <p class="form-error url-error" id="url-error" role="alert" hidden></p>
+  </div>
+
+  <article class="poster">
+    <div class="poster-top">
+      <div class="logos">
+        <img src="https://tecnica4berazategui.edu.ar/img/LogoTec4Blanco.png" alt="Logo E.E.S.T. N°4" data-opcional>
+      </div>
+      <h1>Muestra educativa</h1>
+      <p>Escaneá el código con la cámara del celular y registrate para entrar.</p>
+    </div>
+    <div class="qr-box" id="qr"></div>
+    <div class="poster-bottom">
+      Mostrá la pantalla verde en la puerta
+      <span class="poster-url" id="url-text"></span>
+    </div>
+    <p class="poster-credits">Desarrollado por Eluney Alcaraz, Adrian Estigarribia, Santino Borio Perez, Leandro Burgos, Leila Luna y Franco Castillo</p>
+  </article>
+
+  <!-- qrcode.js 1.0.0 (MIT), copiado al proyecto para no depender de otro sitio -->
+  <script src="assets/vendor/qrcode.min.js"></script>
+  <script src="assets/qr.js"></script>
+</body>
+</html>

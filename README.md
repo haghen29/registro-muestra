@@ -44,6 +44,7 @@ Aplicación web con HTML, CSS y JavaScript, servidor en Node.js y base de datos 
 | https://muestra.tec4.ar/qr | Organización | Cartel A4 para imprimir con el QR, que apunta a https://muestra.tec4.ar |
 
 **Tecnologías:** HTML, CSS y JavaScript puro · funciones serverless en Node.js (Vercel) · MariaDB. No usa PHP. Ver [Cómo está hecho](#10-cómo-está-hecho).
+
 ---
 
 ## Índice

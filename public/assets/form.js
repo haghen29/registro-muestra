@@ -260,7 +260,7 @@
     };
     dato('DNI', fmtDni(v.dni));
     dato('Registro', `#${String(v.id).padStart(4, '0')}`);
-    dato('Visita', v.conAlumno ? `${v.parentesco} de ${v.alumno}${curso}` : 'Invitado general', 'wide');
+    dato('Visita', v.conAlumno ? `${v.parentesco} de ${v.alumno}${curso}` : 'Invitado general / Sin alumno', 'wide');
     dato('Hora', v.createdMs ? fmtHora(v.createdMs) : '');
     t.append(dl);
     if (n > 1) {

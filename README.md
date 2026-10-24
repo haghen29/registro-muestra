@@ -158,7 +158,14 @@ Para cambiarlo, tocá la **llave** arriba a la derecha del panel, escribí el PI
 
 ### Contadores y filtros
 
-Arriba hay cuatro contadores que también funcionan como filtros: **Registrados**, **Por ingresar**, **Ingresaron** y **A revisar** (registros que marcó el detector). El buscador encuentra por apellido, nombre, DNI o nombre del alumno.
+Arriba hay cuatro contadores que también funcionan como filtros:
+
+- **Por ingresar** (se abre por defecto): las personas registradas que todavía no entraron, **el último registro primero**. Acá se toca **Marcar ingreso**: la persona sale de la lista y pasa a **Ingresaron**. El aviso de abajo tiene **Deshacer** por si fue sin querer.
+- **Ingresaron:** las que ya entraron, con la hora.
+- **Registrados:** todas juntas (Por ingresar + Ingresaron), solo para consultar: cada una muestra su estado y no hace falta marcar nada ahí.
+- **A revisar:** registros que marcó el detector.
+
+El buscador encuentra por apellido, nombre, DNI o nombre del alumno. En **Por ingresar**, si buscás a alguien que ya entró, también aparece (con "Ingresó HH:MM"), así se evita un ingreso doble.
 
 El panel consulta la base cada 2 segundos. Si dos recepcionistas trabajan a la vez, los cambios de uno aparecen en el otro.
 

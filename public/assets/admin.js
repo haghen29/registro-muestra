@@ -8,7 +8,7 @@
     pin: '',
     items: new Map(),    // id -> visitante
     cursor: null,
-    filtro: 'todos',
+    filtro: 'pendientes', // al marcar el ingreso, la persona sale de esta lista y pasa a "Ingresaron"
     q: '',
     tab: 'v',
     timer: null,
@@ -46,7 +46,7 @@
   const cursoNombre = (k) => (k ? `${k.split('-')[0]}° ${k.split('-')[1]}ª` : 'Sin curso');
   const visitaTxt = (v) => (v.conAlumno
     ? `${v.parentesco} de ${v.alumno}${cursoClave(v) ? ` · ${cursoNombre(cursoClave(v))}` : ''}`
-    : 'Invitado general');
+    : 'Invitado general / Sin alumno');
   const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
 
   // Distancia de edición (cuántas letras hay que cambiar para pasar de a a b)
@@ -365,9 +365,11 @@
         state.filtro === 'todos' ? true
         : state.filtro === 'ingresados' ? v.ingresado
         : state.filtro === 'revisar' ? Boolean(v.alerta)
-        : !v.ingresado)
+        // Por ingresar: si se busca a alguien, también aparece si ya entró (así se ve "Ingresó 18:42")
+        : !v.ingresado || Boolean(state.q.trim()))
       .filter(coincide)
-      .sort((a, b) => b.id - a.id);
+      // El último registro, primero
+      .sort((a, b) => (b.createdMs || 0) - (a.createdMs || 0) || b.id - a.id);
 
     const frag = document.createDocumentFragment();
     for (const v of lista) frag.append(fila(v));
@@ -387,7 +389,16 @@
   function fila(v) {
     const ocupado = state.enCurso.has(v.id);
     const editar = el('button', { class: 'btn-edit', type: 'button', 'data-accion': 'editar', 'data-id': v.id, 'aria-label': `Editar a ${v.nombre} ${v.apellido}`, title: 'Editar o eliminar' }, icon('edit'));
-    const accion = v.ingresado
+    // "Registrados" es solo para ver a todos (los de "Por ingresar" + los de "Ingresaron"):
+    // ahí no se marca el ingreso, se muestra el estado. El ingreso se marca en "Por ingresar".
+    const soloVer = state.filtro === 'todos';
+    const accion = soloVer
+      ? el('div', { class: 'item-action' },
+          v.ingresado
+            ? el('span', { class: 'done' }, icon('check_circle'), `Ingresó ${v.ingresoMs ? fmtHora(v.ingresoMs) : ''}`)
+            : el('span', { class: 'tag tag-pend' }, icon('schedule'), 'Por ingresar'),
+          editar)
+      : v.ingresado
       ? el('div', { class: 'item-action is-done' },
           el('span', { class: 'done' }, icon('check_circle'), `Ingresó ${v.ingresoMs ? fmtHora(v.ingresoMs) : ''}`),
           el('button', { class: 'link-undo', type: 'button', 'data-accion': 'deshacer', 'data-id': v.id, disabled: ocupado }, 'Deshacer'),
@@ -405,7 +416,7 @@
           el('span', { class: 'item-dni' }, `DNI ${fmtDni(v.dni)}`),
           v.conAlumno
             ? el('button', { class: 'tag tag-link', type: 'button', 'data-accion': 'ver-alumno', 'data-clave': norm(v.alumno), title: `Ver quiénes vinieron a ver a ${v.alumno}` }, icon('school'), visitaTxt(v))
-            : el('span', { class: 'tag tag-gen' }, icon('person'), 'Invitado general'),
+            : el('span', { class: 'tag tag-gen' }, icon('person'), 'Invitado general / Sin alumno'),
           v.alerta ? el('span', { class: 'tag tag-warn', title: v.alerta }, icon('flag'), 'A revisar') : null,
           v.createdMs ? el('span', {}, `Registro ${fmtHora(v.createdMs)}`) : null)),
       accion);
@@ -592,17 +603,25 @@
   $('#inc-man-v').addEventListener('click', () => abrirElegir(null));
   $('#inc-man-a').addEventListener('click', abrirSelAlumnos);
 
-  async function checkin(id, marcar) {
+  // sinConfirmar: el "Deshacer" del aviso ya es una confirmación
+  async function checkin(id, marcar, sinConfirmar = false) {
     const v = state.items.get(id);
     if (!v) return;
-    if (!marcar && !confirm(`¿Deshacer el ingreso de ${v.nombre} ${v.apellido}?`)) return;
+    if (!marcar && !sinConfirmar && !confirm(`¿Deshacer el ingreso de ${v.nombre} ${v.apellido}?`)) return;
     state.enCurso.add(id);
     render();
     try {
       const { status, data } = await post('api/checkin', { id, ingresado: marcar });
       if (data.visitante) state.items.set(id, data.visitante);
       if (status === 200) {
-        toast(marcar ? `Ingreso marcado: ${v.apellido}, ${v.nombre}` : `Ingreso deshecho: ${v.apellido}, ${v.nombre}`);
+        if (marcar) {
+          // Sale de "Por ingresar" y pasa a "Ingresaron"; por si fue un toque sin querer, se puede deshacer
+          toast(`Ingresó: ${v.apellido}, ${v.nombre}. Pasó a "Ingresaron".`, {
+            accion: { texto: 'Deshacer', fn: () => checkin(id, false, true) },
+          });
+        } else {
+          toast(`Ingreso deshecho: ${v.apellido}, ${v.nombre}`);
+        }
       } else if (status === 409) {
         const h = data.visitante?.ingresoMs ? ` a las ${fmtHora(data.visitante.ingresoMs)}` : '';
         toast(`${data.error}${marcar ? h : ''}`, { warn: true });

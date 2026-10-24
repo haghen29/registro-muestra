@@ -279,3 +279,4 @@
 }
 .toast.warn { background: var(--err); }
 .toast button { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: var(--radius-sm); padding: 8px 12px; font-weight: 800; cursor: pointer; }
+.tag-pend { background: #fff4d6; color: #7a5200; }

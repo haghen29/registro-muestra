@@ -188,6 +188,20 @@ const RACING = [
     'neri cardozo', 'brian mansilla', 'matias rojas', 'enzo copetti', 'edwin cardona',
     'anibal moreno', 'hernan galindez', 'agustin ojeda', 'francisco cerro', 'david barbona',
     'claudio ubeda',
+    // Más jugadores de los últimos ~15 años (que un hincha joven pudo ver jugar)
+    'teofilo gutierrez', 'giovanni moreno', 'sebastian grazzini', 'claudio yacob', 'patricio toranzo',
+    'valentin viola', 'gaston diaz', 'pablo alvarez', 'milton caraglio', 'juan manuel martinez',
+    'diego gonzalez', 'martin nervo', 'gabriel mercado', 'brian fernandez', 'washington camacho',
+    'nery leyes', 'jonatan gomez', 'lorenzo melgarejo', 'tomas chancalay', 'carlos alcaraz',
+    'emiliano insua', 'leonel miranda', 'hector fertoli', 'nicolas reniero', 'walter montoya',
+    'fabricio dominguez', 'agustin garcia basso', 'santiago quiros', 'duvan vergara', 'tobias rubio',
+    'valentin rossi', 'elias torres', 'matias ibanez', 'pablo cuadra', 'nicolas oroz', 'juan caceres',
+    'gabriel rojas', 'facundo batista', 'luciano cingolani', 'gaston gil romero', 'carlos arano',
+    'yoel gago', 'matias martinez', 'juan carlos menseguez', 'luciano lollo', 'augusto batalla',
+    'leandro grimi', 'nicolas sanchez', 'renzo saravia', 'marcelo meli', 'joaquin correa',
+    'alexis soto', 'gonzalo piovi', 'emiliano vecchio',
+    // Directores técnicos recientes
+    'eduardo coudet', 'fernando gago', 'diego cocca',
     // Históricos
     'roberto perfumo', 'juan jose pizzuti', 'humberto maschio', 'norberto raffo', 'ruben paz',
     'alfio basile', 'diego milito', 'gabriel milito', 'lisandro lopez', 'claudio lopez',

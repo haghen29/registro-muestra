@@ -314,7 +314,6 @@
     $('#pass-dots').replaceChildren(...lista.pases.map(() => el('span')));
     $('#pass-chips').hidden = !varios;
     $('#pass-nav').hidden = !varios;
-    $('#pass-hint').hidden = true; // sin el texto "Deslizá para ver a..."
 
     const lleno = n >= MAX_PASES;
     $('#otra').disabled = lleno;
@@ -360,12 +359,6 @@
     $('#pass-next').disabled = i === n - 1;
 
     if (n > 1) {
-      const cortos = nombresCortos();
-      const siguen = cortos.slice(i + 1);
-      const lista2 = (xs) => (xs.length <= 2 ? xs.join(' y ') : `${xs.slice(0, 2).join(', ')} y ${xs.length - 2} más`);
-      $('#pass-hint').textContent = siguen.length
-        ? `Deslizá → para ver a ${lista2(siguen)}`
-        : `← Deslizá para volver a ${cortos[0]}`;
       const v = lista.pases[i];
       $('#pass-live').textContent = `Persona ${i + 1} de ${n}: ${v.nombre} ${v.apellido}`;
     }

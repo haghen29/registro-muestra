@@ -284,7 +284,8 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 /* Pista de deslizamiento: la card ocupa casi todo el ancho y se asoma el borde de la siguiente */
 /* La pista es lo único que se achica si no entra todo; cada card se desplaza por dentro */
 .pass-inner > .pass-track { flex: 0 1 auto; min-height: 0; }
-.pass-track > .pass-ticket { overflow-y: auto; }
+.pass-track > .pass-ticket { overflow-y: auto; scrollbar-width: none; }
+.pass-track > .pass-ticket::-webkit-scrollbar { display: none; }
 .pass-track {
   display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory;
   scrollbar-width: none; overscroll-behavior-x: contain;

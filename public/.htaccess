@@ -27,4 +27,10 @@ RewriteRule ^api/_ - [F,L]
   <FilesMatch "^(admin|qr)\.html$">
     Header set X-Robots-Tag "noindex, nofollow"
   </FilesMatch>
+
+  # El HTML nunca se cachea: así el navegador siempre baja la última versión y nunca queda
+  # una página nueva con un JS/CSS viejo guardado (eso causaba errores raros al actualizar).
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
 </IfModule>

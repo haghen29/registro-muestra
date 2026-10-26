@@ -156,8 +156,8 @@ function validarVisitante($b, $permitirFamosos = false)
         $errAlumno = errorNombre($datos['alumno'], 120, 'El nombre del alumno');
         if (mb_strlen($datos['alumno']) < 2) $errores['alumno'] = 'Escribí el nombre del alumno.';
         elseif ($errAlumno) $errores['alumno'] = $errAlumno;
-        if (!$datos['curso']) $errores['curso'] = 'Elegí el año.';
-        if (!$datos['division']) $errores['division'] = 'Elegí la división.';
+        // Año y división son opcionales: se completan si alguien los carga (enteroEn ya devuelve
+        // null cuando vienen vacíos o mal, así que no hace falta exigirlos).
         if (!in_array($datos['parentesco'], PARENTESCOS, true)) $errores['parentesco'] = 'Elegí el parentesco.';
     }
     return [$datos, $errores];

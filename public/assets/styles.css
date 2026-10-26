@@ -346,6 +346,8 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 }
 .volver-pases span { flex: 1; }
 
+.opcional { font-weight: 400; color: var(--muted); font-size: .85em; }
+
 /* Flash rojo cuando se intenta registrar con nombre de jugador de Racing */
 .flash-racing {
   position: fixed; inset: 0; z-index: 9999;

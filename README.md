@@ -10,7 +10,7 @@ La E.E.S.T. N°4 de Berazategui organiza una Muestra Educativa abierta a la comu
 ### La solución
 Una aplicación web que digitaliza todo el ingreso:
 
-- **El visitante se registra solo.** Escanea un código QR con su celular, completa un formulario corto (nombre, apellido, DNI y a qué alumno viene a ver, con su año y división) y recibe una pantalla de confirmación para mostrar en la puerta. No tiene que instalar nada. Si desde el mismo celular registra a sus acompañantes, la pantalla muestra todas las entradas, una por card deslizable.
+- **El visitante se registra solo.** Escanea un código QR con su celular, completa un formulario corto (nombre, apellido, DNI y, si viene a ver a un alumno, su nombre; el año y la división son opcionales) y recibe una pantalla de confirmación para mostrar en la puerta. No tiene que instalar nada. Si desde el mismo celular registra a sus acompañantes, la pantalla muestra todas las entradas, una por card deslizable.
 - **La recepción ve todo en tiempo real.** Los alumnos a cargo de la puerta usan un panel desde una tablet, un celular o una notebook. Cada registro nuevo aparece al instante, se encuentra en segundos por apellido o DNI, y con un toque se marca que la persona ya ingresó. Si dos recepcionistas trabajan a la vez, ven lo mismo y se evita que alguien entre dos veces.
 - **Los datos quedan ordenados.** El sistema agrupa a los familiares por alumno y por curso, y detecta inconsistencias: personas anotadas dos veces, nombres de alumnos escritos de distintas formas o registros de broma. La recepción las corrige o las une sin perder información, y cualquier cambio se puede deshacer.
 
@@ -246,7 +246,7 @@ El formulario rechaza directamente (con un mensaje en el campo) estos casos:
 - **Números o caracteres especiales en el nombre, el apellido o el nombre del alumno.** Solo se aceptan letras (con tildes, ñ y ü) y espacios: nada de números, signos, comillas, guiones, `<`, `>`, `;`, emojis ni otros alfabetos. En el formulario ni siquiera se pueden escribir. Un apellido como "D'Alessandro" se escribe "DAlessandro" o "D Alessandro".
 - **DNI con algo que no sean números** (se aceptan puntos de separación, como `30.123.456`).
 - **DNI que no tenga sentido** para alguien que vive en Argentina: menos de 2.000.000 (serían personas de más de 100 años) o entre 65 y 90 millones (números todavía no emitidos). Los DNI de 90 millones en adelante se permiten: es la serie de extranjeros/residentes. Se ajusta en `DNI_MIN_VALIDO`, `DNI_MAX_ARGENTINO` y `DNI_EXTRANJERO_DESDE` de `public/api/_validar.php`.
-- Si viene a ver a un alumno, **falta el año o la división**.
+- Si viene a ver a un alumno, **falta el nombre del alumno o el parentesco** (el **año y la división son opcionales**: se completan si alguien los carga, y el alumno aparece bajo ese curso en el panel; si nadie lo cargó, queda en "Sin curso").
 
 Los **nombres de famosos y de jugadores de Racing ya no se bloquean**: se dejan registrar y quedan marcados **A revisar** (ver abajo). Así nadie queda afuera por llamarse parecido a alguien conocido, y la recepción igual los controla en la puerta.
 
@@ -435,7 +435,7 @@ Para separar registros fusionados no uses SQL: usá **Deshacer** en el historial
 
 El panel le pregunta a la API cada 2 segundos *"¿qué cambió desde la última vez?"* (`GET /api/visitantes?since=...`) y recibe solo lo nuevo. Los repetidos, los "alumno escrito distinto" y la lista de alumnos se calculan en el navegador de cada recepcionista.
 
-La pantalla verde guarda en el celular (`localStorage`) las entradas de todas las personas que se registraron desde ahí, durante 12 horas y hasta 4 personas por celular. No se consulta al servidor para mostrarlas.
+La pantalla verde guarda en el celular (`localStorage`) las entradas de todas las personas que se registraron desde ahí, durante 12 horas y hasta 5 personas por celular. No se consulta al servidor para mostrarlas.
 
 ### Archivos
 

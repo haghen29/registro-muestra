@@ -10,7 +10,7 @@
   const STORAGE_KEY = 'tec4_muestra_pases';
   const STORAGE_VIEJO = 'tec4_muestra_registro'; // versión anterior: guardaba un solo pase
   const VIGENCIA_MS = 12 * 60 * 60 * 1000;       // la lista dura 12 h desde el último registro
-  const MAX_PASES = 4; // máximo de personas que un mismo celular puede registrar
+  const MAX_PASES = 5; // máximo de personas que un mismo celular puede registrar
   // DNI que tenga sentido para alguien que vive en Argentina (lo mismo revisa el servidor)
   const DNI_MIN = 2000000, DNI_MAX_ARG = 64999999, DNI_EXTRANJERO = 90000000;
   const dniPlausible = (n) => n >= DNI_MIN && !(n > DNI_MAX_ARG && n < DNI_EXTRANJERO);
@@ -51,9 +51,7 @@
     const si = form.conAlumno.value === 'si';
     alumnoBox.hidden = !si;
     form.alumno.required = si;
-    form.curso.required = si;
-    form.division.required = si;
-    form.parentesco.required = si;
+    form.parentesco.required = si; // el año y la división quedan opcionales
     if (si) form.alumno.focus({ preventScroll: true });
   };
   form.addEventListener('change', (e) => {
@@ -118,8 +116,6 @@
     if (d.conAlumno) {
       if (d.alumno.length < 2) e.alumno = 'Escribí el nombre del alumno.';
       else if (!SOLO_LETRAS.test(d.alumno)) e.alumno = 'El nombre del alumno solo puede tener letras y espacios.';
-      if (!d.curso) e.curso = 'Elegí el año.';
-      if (!d.division) e.division = 'Elegí la división.';
       if (!d.parentesco) e.parentesco = 'Elegí el parentesco.';
     }
     return e;

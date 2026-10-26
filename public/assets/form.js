@@ -139,16 +139,22 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(datos),
       });
-      const data = await r.json().catch(() => ({}));
+      const data = await r.json().catch(() => null);
+      // Si la respuesta no llegó entera (señal débil, servidor lento), el registro puede haberse
+      // guardado igual. Volver a tocar Registrarme es seguro: con los mismos datos muestra esa entrada.
+      if (!data || (r.ok && !data.visitante)) throw new Error('sin-respuesta');
       if (!r.ok) {
         if (data.errores) mostrarErrores(data.errores);
         throw new Error(data.error || 'No se pudo registrar.');
       }
       agregarPase({ ...data.visitante, duplicado: data.duplicado });
     } catch (err) {
-      formError.textContent = navigator.onLine
-        ? err.message
-        : 'No hay conexión a internet. Revisá los datos móviles o el Wi-Fi y tocá Registrarme otra vez.';
+      const cortado = err.message === 'sin-respuesta' || err instanceof TypeError; // TypeError = fetch sin respuesta
+      formError.textContent = !navigator.onLine
+        ? 'No hay conexión a internet. Revisá los datos móviles o el Wi-Fi y tocá Registrarme otra vez.'
+        : cortado
+          ? 'No llegó la confirmación del servidor. Tocá Registrarme otra vez: si ya quedaste registrado, vas a ver tu entrada (no se duplica).'
+          : err.message;
       formError.hidden = false;
       formError.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } finally {
@@ -214,7 +220,7 @@
       lista.pases.push(p);
       if (lista.pases.length > MAX_PASES) lista.pases.shift();
       lista.actual = lista.pases.length - 1;
-      if (lista.pases.length > 1) aviso = `${primerNombre(p)} agregado · ya son ${lista.pases.length}. Deslizá para ver a todos.`;
+      if (lista.pases.length > 1) aviso = `${primerNombre(p)} agregado · ya son ${lista.pases.length}.`;
     }
     lista.actualizado = Date.now();
     guardar();
@@ -308,7 +314,7 @@
     $('#pass-dots').replaceChildren(...lista.pases.map(() => el('span')));
     $('#pass-chips').hidden = !varios;
     $('#pass-nav').hidden = !varios;
-    $('#pass-hint').hidden = !varios;
+    $('#pass-hint').hidden = true; // sin el texto "Deslizá para ver a..."
 
     const lleno = n >= MAX_PASES;
     $('#otra').disabled = lleno;

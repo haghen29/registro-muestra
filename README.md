@@ -245,10 +245,12 @@ El formulario rechaza directamente (con un mensaje en el campo) estos casos:
 
 - **Números o caracteres especiales en el nombre, el apellido o el nombre del alumno.** Solo se aceptan letras (con tildes, ñ y ü) y espacios: nada de números, signos, comillas, guiones, `<`, `>`, `;`, emojis ni otros alfabetos. En el formulario ni siquiera se pueden escribir. Un apellido como "D'Alessandro" se escribe "DAlessandro" o "D Alessandro".
 - **DNI con algo que no sean números** (se aceptan puntos de separación, como `30.123.456`).
-- **Nombres de famosos**, argentinos e internacionales: deportistas, músicos, actores, políticos, streamers y personajes ("Lionel Messi", "Taylor Swift", "Bob Esponja"…), también en el nombre del alumno. La lista está en `public/api/_famosos.php`. Se detecta aunque cambien el orden o agreguen segundos nombres ("Messi Lionel Andrés").
+- **DNI que no tenga sentido** para alguien que vive en Argentina: menos de 2.000.000 (serían personas de más de 100 años) o entre 65 y 90 millones (números todavía no emitidos). Los DNI de 90 millones en adelante se permiten: es la serie de extranjeros/residentes. Se ajusta en `DNI_MIN_VALIDO`, `DNI_MAX_ARGENTINO` y `DNI_EXTRANJERO_DESDE` de `public/api/_validar.php`.
+- **Nombres de famosos**, argentinos e internacionales: deportistas, músicos, actores, políticos, streamers, personajes, el fútbol argentino actual y nombres artísticos de cine adulto. La lista está en `public/api/_famosos.php`. Se detecta aunque cambien el orden o agreguen segundos nombres ("Messi Lionel Andrés").
+- **Jugadores de Racing** (históricos y actuales, lista `RACING` en `_famosos.php`): además, el formulario muestra la pantalla en rojo un segundo antes del aviso.
 - Si viene a ver a un alumno, **falta el año o la división**.
 
-Para no dejar afuera a familias reales, la lista no tiene nombres comunes ("Enzo Fernández", "Julián Álvarez") ni apellidos sueltos ("Messi", "Maradona"). Si aun así una persona de verdad se llama igual que un famoso, el recepcionista puede corregir su registro desde el lápiz del panel, que sí lo permite.
+Los nombres de famosos van siempre como **nombre completo** (o apodos que nadie usa como nombre real), así alguien que comparte **solo el apellido** entra sin problema: "Lucas Sosa" o "Martín Milito" pasan, aunque "Santiago Sosa" y "Diego Milito" estén bloqueados. Si una persona de verdad se llama exactamente igual que un famoso, el recepcionista la registra desde el lápiz del panel, que sí lo permite. **Importante:** a pedido de la escuela se incluyeron nombres comunes del fútbol (Enzo Fernández, Lautaro Martínez, jugadores de Racing…); si eso frena a un vecino real, se carga desde el panel.
 
 ### Lo que se marca para revisar
 
@@ -262,7 +264,7 @@ Para no dejar afuera a familias reales, la lista no tiene nombres comunes ("Enzo
 - DNI con todos los números iguales (`11111111`), en escalera (`12345678`, o 5 seguidos como `40123456`) o que empieza con 0.
 - DNI de relleno: muchos números repetidos (`11101111`), un patrón que se repite (`12121212`, `45674567`) o de a pares (`11223344`).
 - DNI con números de chiste u ofensivos (`666` al principio o al final, `6969`, `42069`, `1488`, `1312`, `8008`/`58008`/`80085`).
-- DNI en un rango que todavía no se emitió (70.000.000 a 89.999.999).
+- DNI con 5 números seguidos o patrones raros (los DNI imposibles ya se rechazan directamente; ver arriba).
 
 **No bloquea a nadie.** Al visitante le aparece la pantalla verde normal (así no sabe que lo marcaron) y en el panel el registro sale con borde naranja y la etiqueta **A revisar**. También aparece en **Inconsistencias → A revisar**. El recepcionista le pide el DNI en la puerta y, si los datos son reales, toca **Los datos están bien** (ahí o desde el lápiz).
 
@@ -433,7 +435,7 @@ Para separar registros fusionados no uses SQL: usá **Deshacer** en el historial
 
 El panel le pregunta a la API cada 2 segundos *"¿qué cambió desde la última vez?"* (`GET /api/visitantes?since=...`) y recibe solo lo nuevo. Los repetidos, los "alumno escrito distinto" y la lista de alumnos se calculan en el navegador de cada recepcionista.
 
-La pantalla verde guarda en el celular (`localStorage`) las entradas de todas las personas que se registraron desde ahí, durante 12 horas y hasta 10 personas. No se consulta al servidor para mostrarlas.
+La pantalla verde guarda en el celular (`localStorage`) las entradas de todas las personas que se registraron desde ahí, durante 12 horas y hasta 4 personas por celular. No se consulta al servidor para mostrarlas.
 
 ### Archivos
 

@@ -10,7 +10,20 @@
   const STORAGE_KEY = 'tec4_muestra_pases';
   const STORAGE_VIEJO = 'tec4_muestra_registro'; // versión anterior: guardaba un solo pase
   const VIGENCIA_MS = 12 * 60 * 60 * 1000;       // la lista dura 12 h desde el último registro
-  const MAX_PASES = 10;
+  const MAX_PASES = 4; // máximo de personas que un mismo celular puede registrar
+  // DNI que tenga sentido para alguien que vive en Argentina (lo mismo revisa el servidor)
+  const DNI_MIN = 2000000, DNI_MAX_ARG = 64999999, DNI_EXTRANJERO = 90000000;
+  const dniPlausible = (n) => n >= DNI_MIN && !(n > DNI_MAX_ARG && n < DNI_EXTRANJERO);
+
+  // Guiño a la rivalidad: si alguien se anota con nombre de jugador de Racing, la pantalla
+  // parpadea en rojo un segundo antes de mostrar el aviso de que no puede registrarse.
+  function flashRacing() {
+    const d = document.createElement('div');
+    d.className = 'flash-racing';
+    d.textContent = 'Racing no 🔴';
+    document.body.appendChild(d);
+    setTimeout(() => d.remove(), 1300);
+  }
 
   // Logos: si no cargan, se quitan en lugar de mostrar el ícono de imagen rota
   document.querySelectorAll('img[data-opcional]').forEach((img) => {
@@ -100,6 +113,7 @@
     if (d.apellido.length < 2) e.apellido = 'Escribí tu apellido.';
     else if (!SOLO_LETRAS.test(d.apellido)) e.apellido = 'El apellido solo puede tener letras y espacios.';
     if (!/^\d{7,8}$/.test(d.dni)) e.dni = 'El DNI tiene que tener 7 u 8 números.';
+    else if (!dniPlausible(Number(d.dni))) e.dni = 'Revisá el DNI: ese número no corresponde a un documento válido.';
     if (d.conAlumno === null) e.conAlumno = 'Elegí Sí o No.';
     if (d.conAlumno) {
       if (d.alumno.length < 2) e.alumno = 'Escribí el nombre del alumno.';
@@ -144,6 +158,7 @@
       // guardado igual. Volver a tocar Registrarme es seguro: con los mismos datos muestra esa entrada.
       if (!data || (r.ok && !data.visitante)) throw new Error('sin-respuesta');
       if (!r.ok) {
+        if (data.racing) flashRacing(); // quiso anotarse con nombre de jugador de Racing
         if (data.errores) mostrarErrores(data.errores);
         throw new Error(data.error || 'No se pudo registrar.');
       }

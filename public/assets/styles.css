@@ -346,6 +346,15 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 }
 .volver-pases span { flex: 1; }
 
+/* Flash rojo cuando se intenta registrar con nombre de jugador de Racing */
+.flash-racing {
+  position: fixed; inset: 0; z-index: 9999;
+  display: grid; place-items: center; text-align: center;
+  background: #c20000; color: #fff; font-size: clamp(2rem, 9vw, 3.2rem); font-weight: 800;
+  pointer-events: none; animation: flashRacing 1.3s ease forwards;
+}
+@keyframes flashRacing { 0% { opacity: 0; } 12% { opacity: 1; } 78% { opacity: 1; } 100% { opacity: 0; } }
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }

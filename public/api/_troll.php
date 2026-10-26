@@ -18,6 +18,9 @@ const NOMBRES_CHISTE = [
     'aitor tilla', 'alan brito', 'zoila vaca', 'ema roides', 'mario neta',
     'carmelo coton', 'ana tomia', 'paco gerte', 'debora meltrozo', 'elmer curio',
     'joe mama', 'ben dover', 'mike hunt', 'hugh jass',
+    // Apodos y memes de gente conocida: no se bloquean (podrían ser reales), se marcan "A revisar".
+    'perrito fiu fiu', 'perro fiu fiu', 'fiu fiu', 'atahualpa', 'el noba', 'papu gomez',
+    'el dipy', 'la tota', 'el diez', 'el mufa', 'el loco',
 ];
 
 // Palabras sueltas inapropiadas (se comparan palabra por palabra).

@@ -15,6 +15,23 @@ const PARENTESCOS = ['Padre', 'Madre', 'Hermano/a', 'Abuelo/a', 'Tío/a', 'Amigo
 const CURSO_MAX = 7;
 const DIVISION_MAX = 6;
 
+// DNI que tenga sentido para alguien que vive en Argentina hoy. Fuera de estos rangos se rechaza.
+// - Menos de 2.000.000: serían personas de más de 100 años (DNI de esa época). Improbable.
+// - Entre ~64.000.000 y 90.000.000: números que todavía no se emitieron (los recién nacidos
+//   de hoy rondan los 61-63 millones; se deja margen).
+// - 90.000.000 en adelante: es la serie de DNI de extranjeros/residentes, así que se permite.
+const DNI_MIN_VALIDO = 2000000;
+const DNI_MAX_ARGENTINO = 64999999;
+const DNI_EXTRANJERO_DESDE = 90000000;
+
+// true si el número de DNI (ya validado como 7-8 dígitos) corresponde a un documento posible.
+function dniPlausible($n)
+{
+    if ($n < DNI_MIN_VALIDO) return false;
+    if ($n > DNI_MAX_ARGENTINO && $n < DNI_EXTRANJERO_DESDE) return false;
+    return true;
+}
+
 // Letras latinas (incluye á é í ó ú ñ ü ç à ...) y espacios simples entre palabras
 const SOLO_LETRAS = '/^[A-Za-zÀ-ÖØ-öø-ÿ]+( [A-Za-zÀ-ÖØ-öø-ÿ]+)*$/u';
 
@@ -58,17 +75,30 @@ function errorNombre($valor, $max = 80, $campo = 'El nombre')
     return null;
 }
 
-// true si el texto tiene todas las palabras de algún famoso (en cualquier orden)
-function esFamoso($texto)
+// true si el texto tiene todas las palabras de alguna entrada de la lista (en cualquier orden)
+function tieneAlguno($texto, $lista)
 {
     $palabras = array_flip(explode(' ', norm($texto)));
-    foreach (UNA_PALABRA as $p) if (isset($palabras[$p])) return true;
-    foreach (FAMOSOS as $f) {
+    foreach ($lista as $f) {
         $todas = true;
         foreach (explode(' ', $f) as $p) if (!isset($palabras[$p])) { $todas = false; break; }
         if ($todas) return true;
     }
     return false;
+}
+
+// true si el texto es un famoso (lista FAMOSOS, nombres completos, o UNA_PALABRA suelta)
+function esFamoso($texto)
+{
+    $palabras = array_flip(explode(' ', norm($texto)));
+    foreach (UNA_PALABRA as $p) if (isset($palabras[$p])) return true;
+    return tieneAlguno($texto, FAMOSOS);
+}
+
+// true si el nombre es de un jugador de Racing (para bloquear y mostrar la pantalla roja)
+function esRacing($texto)
+{
+    return tieneAlguno($texto, RACING);
 }
 
 // Número entero entre 1 y max, recibido como número o como texto de solo dígitos.
@@ -111,11 +141,21 @@ function validarVisitante($b, $permitirFamosos = false)
     elseif ($e = errorNombre($datos['nombre'])) $errores['nombre'] = $e;
     if (mb_strlen($datos['apellido']) < 2) $errores['apellido'] = 'Escribí el apellido.';
     elseif ($e = errorNombre($datos['apellido'], 80, 'El apellido')) $errores['apellido'] = $e;
-    if (!$errores && !$permitirFamosos && esFamoso($datos['nombre'] . ' ' . $datos['apellido'])) {
-        $errores['nombre'] = 'Ese nombre es de una persona famosa. Escribí tu nombre real.';
+    if (!$errores && !$permitirFamosos) {
+        $completo = $datos['nombre'] . ' ' . $datos['apellido'];
+        if (esRacing($completo)) {
+            $errores['nombre'] = 'Ese nombre es de un jugador de Racing. Escribí tu nombre real.';
+        } elseif (esFamoso($completo)) {
+            $errores['nombre'] = 'Ese nombre es de una persona famosa. Escribí tu nombre real.';
+        }
     }
 
-    if (!preg_match('/^\d{7,8}$/', $datos['dni'])) $errores['dni'] = 'El DNI tiene que tener 7 u 8 números, sin letras ni símbolos.';
+    if (!preg_match('/^\d{7,8}$/', $datos['dni'])) {
+        $errores['dni'] = 'El DNI tiene que tener 7 u 8 números, sin letras ni símbolos.';
+    } elseif (!$permitirFamosos && !dniPlausible((int) $datos['dni'])) {
+        // El panel (permitirFamosos) sí puede guardar un DNI inusual pero real
+        $errores['dni'] = 'Revisá el DNI: ese número no corresponde a un documento válido.';
+    }
     if (!is_bool($b['conAlumno'] ?? null)) $errores['conAlumno'] = 'Elegí Sí o No.';
 
     if ($conAlumno) {

@@ -6,7 +6,12 @@ require_once __DIR__ . '/_troll.php';
 soloMetodo('POST');
 
 list($d, $errores) = validarVisitante(cuerpo());
-if ($errores) responder(400, ['error' => 'Revisá los datos marcados.', 'errores' => $errores]);
+if ($errores) {
+    $resp = ['error' => 'Revisá los datos marcados.', 'errores' => $errores];
+    // Si quiso anotarse con nombre de jugador de Racing, el formulario muestra un segundo la pantalla roja
+    if (esRacing(($d['nombre'] ?? '') . ' ' . ($d['apellido'] ?? ''))) $resp['racing'] = true;
+    responder(400, $resp);
+}
 
 try {
     $resultado = transaccion(function () use ($d) {

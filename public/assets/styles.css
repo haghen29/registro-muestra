@@ -176,6 +176,20 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .choice input:checked + span .ms { color: var(--accent); }
 .choice input:focus-visible + span { outline: 3px solid var(--focus); outline-offset: 2px; }
 
+/* "Soy alumno/a de la escuela": aparece cuando eligen que NO vienen a ver a nadie */
+.soy-alumno {
+  display: flex; align-items: center; gap: 10px;
+  margin: -4px 0 14px; padding: 12px 14px;
+  border: 1.5px solid var(--line); border-radius: var(--radius);
+  cursor: pointer; user-select: none;
+}
+.soy-alumno span { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; }
+.soy-alumno span .ms { font-size: 1.5rem; color: var(--navy-3); }
+.soy-alumno input { width: 20px; height: 20px; accent-color: var(--navy); flex: none; }
+.soy-alumno:has(input:checked) { background: var(--navy); border-color: var(--navy); color: #fff; }
+.soy-alumno:has(input:checked) span .ms { color: var(--accent); }
+.soy-alumno input:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
 .alumno-box {
   margin: 4px 0 18px;
   padding: 16px 16px 2px;

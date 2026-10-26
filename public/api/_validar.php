@@ -10,10 +10,11 @@
 // y el navegador muestra los datos con textContent, nunca como HTML.
 require_once __DIR__ . '/_famosos.php';
 
-const PARENTESCOS = ['Padre', 'Madre', 'Hermano/a', 'Abuelo/a', 'Tío/a', 'Amigo/a', 'Otro'];
+// "Alumno/a" es para quien se registra como alumno de la escuela (no viene a ver a nadie).
+const PARENTESCOS = ['Padre', 'Madre', 'Hermano/a', 'Abuelo/a', 'Tío/a', 'Amigo/a', 'Otro', 'Alumno/a'];
 // Años y divisiones de la escuela. Si cambian, actualizar también los <select> de index.html y admin.html.
 const CURSO_MAX = 7;
-const DIVISION_MAX = 6;
+const DIVISION_MAX = 4;
 
 // DNI que tenga sentido para alguien que vive en Argentina hoy. Fuera de estos rangos se rechaza.
 // - Menos de 2.000.000: serían personas de más de 100 años (DNI de esa época). Improbable.
@@ -123,6 +124,9 @@ function idDe($v)
 function validarVisitante($b, $permitirFamosos = false)
 {
     $conAlumno = ($b['conAlumno'] ?? null) === true;
+    // "Soy alumno/a de la escuela": solo cuando NO viene a ver a nadie. Se guarda marcando el
+    // parentesco como 'Alumno/a' (sin tocar la base), así el panel lo muestra como alumno.
+    $esAlumno = !$conAlumno && ($b['esAlumno'] ?? null) === true;
     $dniTexto = is_string($b['dni'] ?? null) || is_int($b['dni'] ?? null) ? mb_substr(trim((string) $b['dni']), 0, 20) : '';
     $datos = [
         // Se limpian sin recortar: si son más largos que lo permitido, se rechazan (no se cortan en silencio)
@@ -133,7 +137,7 @@ function validarVisitante($b, $permitirFamosos = false)
         'alumno' => $conAlumno ? limpiar($b['alumno'] ?? null, 1000) : null,
         'curso' => $conAlumno ? enteroEn($b['curso'] ?? null, CURSO_MAX) : null,
         'division' => $conAlumno ? enteroEn($b['division'] ?? null, DIVISION_MAX) : null,
-        'parentesco' => $conAlumno && is_string($b['parentesco'] ?? null) ? $b['parentesco'] : null,
+        'parentesco' => $conAlumno && is_string($b['parentesco'] ?? null) ? $b['parentesco'] : ($esAlumno ? 'Alumno/a' : null),
     ];
     $errores = [];
 

@@ -44,9 +44,10 @@
   const fmtHora = (ms) => new Date(ms).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
   const cursoClave = (v) => (v.curso && v.division ? `${v.curso}-${v.division}` : '');
   const cursoNombre = (k) => (k ? `${k.split('-')[0]}° ${k.split('-')[1]}ª` : 'Sin curso');
+  const esAlumno = (v) => !v.conAlumno && v.parentesco === 'Alumno/a';
   const visitaTxt = (v) => (v.conAlumno
     ? `${v.parentesco} de ${v.alumno}${cursoClave(v) ? ` · ${cursoNombre(cursoClave(v))}` : ''}`
-    : 'Invitado general / Sin alumno');
+    : esAlumno(v) ? 'Alumno/a de la escuela' : 'Invitado general / Sin alumno');
   const plural = (n, s, p) => `${n} ${n === 1 ? s : p}`;
 
   // Distancia de edición (cuántas letras hay que cambiar para pasar de a a b)
@@ -416,7 +417,9 @@
           el('span', { class: 'item-dni' }, `DNI ${fmtDni(v.dni)}`),
           v.conAlumno
             ? el('button', { class: 'tag tag-link', type: 'button', 'data-accion': 'ver-alumno', 'data-clave': norm(v.alumno), title: `Ver quiénes vinieron a ver a ${v.alumno}` }, icon('school'), visitaTxt(v))
-            : el('span', { class: 'tag tag-gen' }, icon('person'), 'Invitado general / Sin alumno'),
+            : esAlumno(v)
+              ? el('span', { class: 'tag tag-gen' }, icon('backpack'), 'Alumno/a de la escuela')
+              : el('span', { class: 'tag tag-gen' }, icon('person'), 'Invitado general / Sin alumno'),
           v.alerta ? el('span', { class: 'tag tag-warn', title: v.alerta }, icon('flag'), 'A revisar') : null,
           v.createdMs ? el('span', {}, `Registro ${fmtHora(v.createdMs)}`) : null)),
       accion);

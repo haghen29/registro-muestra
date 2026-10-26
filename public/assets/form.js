@@ -49,7 +49,10 @@
   /* ---------- Mostrar campos del alumno ---------- */
   const actualizarAlumno = () => {
     const si = form.conAlumno.value === 'si';
+    const no = form.conAlumno.value === 'no';
     alumnoBox.hidden = !si;
+    $('#soy-alumno-box').hidden = !no;   // "Soy alumno/a" solo cuando NO viene a ver a nadie
+    if (!no) form.esAlumno.checked = false;
     form.alumno.required = si;
     form.parentesco.required = si; // el año y la división quedan opcionales
     if (si) form.alumno.focus({ preventScroll: true });
@@ -132,6 +135,7 @@
       apellido: form.apellido.value.trim(),
       dni: form.dni.value.replace(/\D/g, ''),
       conAlumno: valor === 'si' ? true : valor === 'no' ? false : null,
+      esAlumno: valor === 'no' && form.esAlumno.checked, // marcó "Soy alumno/a de la escuela"
       alumno: form.alumno.value.trim(),
       curso: Number(form.curso.value) || null,
       division: Number(form.division.value) || null,
@@ -287,7 +291,8 @@
     };
     dato('DNI', fmtDni(v.dni));
     dato('Registro', `#${String(v.id).padStart(4, '0')}`);
-    dato('Visita', v.conAlumno ? `${v.parentesco} de ${v.alumno}${curso}` : 'Invitado general / Sin alumno', 'wide');
+    const visita = v.conAlumno ? `${v.parentesco} de ${v.alumno}${curso}` : (v.parentesco === 'Alumno/a' ? 'Alumno/a de la escuela' : 'Invitado general / Sin alumno');
+    dato('Visita', visita, 'wide');
     dato('Hora', v.createdMs ? fmtHora(v.createdMs) : '');
     t.append(dl);
     if (n > 1) {

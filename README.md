@@ -10,7 +10,7 @@ La E.E.S.T. N°4 de Berazategui organiza una Muestra Educativa abierta a la comu
 ### La solución
 Una aplicación web que digitaliza todo el ingreso:
 
-- **El visitante se registra solo.** Escanea un código QR con su celular, completa un formulario corto (nombre, apellido, DNI y, si viene a ver a un alumno, su nombre; el año y la división son opcionales) y recibe una pantalla de confirmación para mostrar en la puerta. No tiene que instalar nada. Si desde el mismo celular registra a sus acompañantes, la pantalla muestra todas las entradas, una por card deslizable.
+- **El visitante se registra solo.** Escanea un código QR con su celular, completa un formulario corto (nombre, apellido, DNI y, si viene a ver a un alumno, su nombre; el año y la división son opcionales). Si no viene a ver a nadie, puede marcar **Soy alumno/a de la escuela** para anotarse como alumno. Recibe una pantalla de confirmación para mostrar en la puerta. No tiene que instalar nada. Si desde el mismo celular registra a sus acompañantes, la pantalla muestra todas las entradas, una por card deslizable.
 - **La recepción ve todo en tiempo real.** Los alumnos a cargo de la puerta usan un panel desde una tablet, un celular o una notebook. Cada registro nuevo aparece al instante, se encuentra en segundos por apellido o DNI, y con un toque se marca que la persona ya ingresó. Si dos recepcionistas trabajan a la vez, ven lo mismo y se evita que alguien entre dos veces.
 - **Los datos quedan ordenados.** El sistema agrupa a los familiares por alumno y por curso, y detecta inconsistencias: personas anotadas dos veces, nombres de alumnos escritos de distintas formas o registros de broma. La recepción las corrige o las une sin perder información, y cualquier cambio se puede deshacer.
 
@@ -279,7 +279,8 @@ Todo lo que llega a la API se revisa en el servidor, aunque el formulario ya lo 
 | Nombre, apellido, alumno | Solo letras latinas (con tildes, ñ, ü) y espacios; 2 a 80 caracteres (120 el alumno); tiene que ser texto | `public/api/_validar.php` |
 | DNI | 7 u 8 números (puntos o espacios de separación opcionales) | `public/api/_validar.php` |
 | ¿Viene a ver a un alumno? | Solo `true` o `false` (no el texto `"true"`) | `public/api/_validar.php` |
-| Año, división | Enteros de 1 a 7 y de 1 a 6 | `public/api/_validar.php` |
+| Soy alumno/a de la escuela | Solo `true` o `false`; solo cuenta si no viene a ver a nadie | `public/api/_validar.php` |
+| Año, división | Enteros de 1 a 7 y de 1 a 4 | `public/api/_validar.php` |
 | Parentesco | Solo una de las opciones de la lista | `public/api/_validar.php` |
 | Ids de registros y fusiones | Enteros positivos | `idDe` en `public/api/_validar.php` |
 | PIN | 4 a 8 números; se compara cifrado | `public/api/_auth.php` |

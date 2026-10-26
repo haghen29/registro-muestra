@@ -16,21 +16,29 @@ class HttpError extends Exception
 function db()
 {
     static $pdo = null;
+    // Si ya no se pudo conectar en este pedido, se avisa enseguida en vez de volver a esperar
+    static $fallo = null;
+    if ($fallo) throw $fallo;
     if ($pdo === null) {
-        $pdo = new PDO(
-            'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=utf8mb4',
-            DB_USER,
-            DB_PASSWORD,
-            [
-                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                PDO::ATTR_EMULATE_PREPARES => false,
-                PDO::MYSQL_ATTR_FOUND_ROWS => true,   // filas encontradas, no solo las que cambiaron
-                // Si la base no responde, cortar a los 30 s con un error claro en vez de dejar el
-                // pedido colgado (en un hosting gratis, los pedidos colgados se juntan y tiran 503)
-                PDO::ATTR_TIMEOUT => 30, // alcanza para el arranque lento de un hosting gratis
-            ]
-        );
+        try {
+            $pdo = new PDO(
+                'mysql:host=' . DB_HOST . ';port=' . DB_PORT . ';dbname=' . DB_NAME . ';charset=utf8mb4',
+                DB_USER,
+                DB_PASSWORD,
+                [
+                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    PDO::ATTR_EMULATE_PREPARES => false,
+                    PDO::MYSQL_ATTR_FOUND_ROWS => true,   // filas encontradas, no solo las que cambiaron
+                    // Si la base no responde, cortar a los 30 s con un error claro en vez de dejar el
+                    // pedido colgado (en un hosting gratis, los pedidos colgados se juntan y tiran 503)
+                    PDO::ATTR_TIMEOUT => 30, // alcanza para el arranque lento de un hosting gratis
+                ]
+            );
+        } catch (PDOException $e) {
+            $fallo = $e;
+            throw $e;
+        }
         asegurarEsquema($pdo);
     }
     return $pdo;

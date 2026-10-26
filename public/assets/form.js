@@ -20,7 +20,7 @@
   function flashRacing() {
     const d = document.createElement('div');
     d.className = 'flash-racing';
-    d.textContent = 'Racing no 🔴';
+    d.textContent = '+23';
     document.body.appendChild(d);
     setTimeout(() => d.remove(), 1300);
   }

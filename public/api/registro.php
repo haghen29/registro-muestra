@@ -64,7 +64,10 @@ try {
     // Al visitante no le mostramos la marca del detector
     $visitante = $resultado['visitante'];
     unset($visitante['alerta'], $visitante['eliminado'], $visitante['fusionadoEn']);
-    responder($resultado['duplicado'] ? 200 : 201, ['ok' => true, 'duplicado' => $resultado['duplicado'], 'visitante' => $visitante]);
+    $resp = ['ok' => true, 'duplicado' => $resultado['duplicado'], 'visitante' => $visitante];
+    // Si el nombre es de un jugador de Racing, el formulario muestra un segundo la pantalla roja
+    if (esRacing($d['nombre'] . ' ' . $d['apellido'])) $resp['racing'] = true;
+    responder($resultado['duplicado'] ? 200 : 201, $resp);
 } catch (Throwable $e) {
     // Dos registros iguales al mismo tiempo (doble toque): el segundo choca con la clave única
     if (esDuplicado($e)) responder(409, ['error' => 'Esta persona se acaba de registrar. Tocá Registrarme otra vez para ver la entrada.']);

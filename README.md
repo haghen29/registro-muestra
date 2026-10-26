@@ -246,17 +246,17 @@ El formulario rechaza directamente (con un mensaje en el campo) estos casos:
 - **Números o caracteres especiales en el nombre, el apellido o el nombre del alumno.** Solo se aceptan letras (con tildes, ñ y ü) y espacios: nada de números, signos, comillas, guiones, `<`, `>`, `;`, emojis ni otros alfabetos. En el formulario ni siquiera se pueden escribir. Un apellido como "D'Alessandro" se escribe "DAlessandro" o "D Alessandro".
 - **DNI con algo que no sean números** (se aceptan puntos de separación, como `30.123.456`).
 - **DNI que no tenga sentido** para alguien que vive en Argentina: menos de 2.000.000 (serían personas de más de 100 años) o entre 65 y 90 millones (números todavía no emitidos). Los DNI de 90 millones en adelante se permiten: es la serie de extranjeros/residentes. Se ajusta en `DNI_MIN_VALIDO`, `DNI_MAX_ARGENTINO` y `DNI_EXTRANJERO_DESDE` de `public/api/_validar.php`.
-- **Nombres de famosos**, argentinos e internacionales: deportistas, músicos, actores, políticos, streamers, personajes, el fútbol argentino actual y nombres artísticos de cine adulto. La lista está en `public/api/_famosos.php`. Se detecta aunque cambien el orden o agreguen segundos nombres ("Messi Lionel Andrés").
-- **Jugadores de Racing** (históricos y actuales, lista `RACING` en `_famosos.php`): además, el formulario muestra la pantalla en rojo un segundo antes del aviso.
 - Si viene a ver a un alumno, **falta el año o la división**.
 
-Los nombres de famosos van siempre como **nombre completo** (o apodos que nadie usa como nombre real), así alguien que comparte **solo el apellido** entra sin problema: "Lucas Sosa" o "Martín Milito" pasan, aunque "Santiago Sosa" y "Diego Milito" estén bloqueados. Si una persona de verdad se llama exactamente igual que un famoso, el recepcionista la registra desde el lápiz del panel, que sí lo permite. **Importante:** a pedido de la escuela se incluyeron nombres comunes del fútbol (Enzo Fernández, Lautaro Martínez, jugadores de Racing…); si eso frena a un vecino real, se carga desde el panel.
+Los **nombres de famosos y de jugadores de Racing ya no se bloquean**: se dejan registrar y quedan marcados **A revisar** (ver abajo). Así nadie queda afuera por llamarse parecido a alguien conocido, y la recepción igual los controla en la puerta.
 
 ### Lo que se marca para revisar
 
 `public/api/_troll.php` revisa cada registro y marca los sospechosos como **A revisar**. Detecta:
 
-- Nombres de chiste ("Armando Esteban Quito", "Elsa Pato"…).
+- **Nombres de famosos** (argentinos e internacionales: deportistas, músicos, actores, políticos, streamers, personajes, el fútbol argentino actual, nombres artísticos de cine adulto). Lista en `public/api/_famosos.php`. Se detecta aunque cambien el orden o agreguen segundos nombres. Como van como **nombre completo**, quien comparte solo el apellido no se marca ("Lucas Sosa" pasa limpio; "Diego Milito" queda A revisar).
+- **Jugadores de Racing** (lista `RACING` en `_famosos.php`, históricos y actuales). Además, el formulario les muestra la pantalla en **rojo** un segundo (guiño a la rivalidad) antes de la pantalla verde.
+- Nombres de chiste ("Armando Esteban Quito", "Elsa Pato"…) y apodos ("perrito fiu fiu", "atahualpa"…).
 - Palabras inapropiadas.
 - Datos de prueba o tecleado al azar ("test", "asdf", "jajaja", "qwerty").
 - Letras repetidas ("aaaa"), palabras sin vocales.

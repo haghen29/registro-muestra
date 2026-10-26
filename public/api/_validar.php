@@ -141,14 +141,8 @@ function validarVisitante($b, $permitirFamosos = false)
     elseif ($e = errorNombre($datos['nombre'])) $errores['nombre'] = $e;
     if (mb_strlen($datos['apellido']) < 2) $errores['apellido'] = 'Escribí el apellido.';
     elseif ($e = errorNombre($datos['apellido'], 80, 'El apellido')) $errores['apellido'] = $e;
-    if (!$errores && !$permitirFamosos) {
-        $completo = $datos['nombre'] . ' ' . $datos['apellido'];
-        if (esRacing($completo)) {
-            $errores['nombre'] = 'Ese nombre es de un jugador de Racing. Escribí tu nombre real.';
-        } elseif (esFamoso($completo)) {
-            $errores['nombre'] = 'Ese nombre es de una persona famosa. Escribí tu nombre real.';
-        }
-    }
+    // Nota: los nombres de famosos y de jugadores de Racing NO se rechazan. Se dejan registrar y
+    // el detector (_troll.php) los marca "A revisar" para que la recepción los controle.
 
     if (!preg_match('/^\d{7,8}$/', $datos['dni'])) {
         $errores['dni'] = 'El DNI tiene que tener 7 u 8 números, sin letras ni símbolos.';
@@ -162,7 +156,6 @@ function validarVisitante($b, $permitirFamosos = false)
         $errAlumno = errorNombre($datos['alumno'], 120, 'El nombre del alumno');
         if (mb_strlen($datos['alumno']) < 2) $errores['alumno'] = 'Escribí el nombre del alumno.';
         elseif ($errAlumno) $errores['alumno'] = $errAlumno;
-        elseif (!$permitirFamosos && esFamoso($datos['alumno'])) $errores['alumno'] = 'Ese nombre es de una persona famosa. Escribí el nombre real del alumno.';
         if (!$datos['curso']) $errores['curso'] = 'Elegí el año.';
         if (!$datos['division']) $errores['division'] = 'Elegí la división.';
         if (!in_array($datos['parentesco'], PARENTESCOS, true)) $errores['parentesco'] = 'Elegí el parentesco.';

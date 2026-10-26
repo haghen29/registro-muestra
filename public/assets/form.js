@@ -162,6 +162,7 @@
         if (data.errores) mostrarErrores(data.errores);
         throw new Error(data.error || 'No se pudo registrar.');
       }
+      if (data.racing) flashRacing(); // se anotó con nombre de jugador de Racing: flash rojo y después su pase
       agregarPase({ ...data.visitante, duplicado: data.duplicado });
     } catch (err) {
       const cortado = err.message === 'sin-respuesta' || err instanceof TypeError; // TypeError = fetch sin respuesta

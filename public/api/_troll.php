@@ -115,9 +115,14 @@ function analizar($v)
     $nombre = $v['nombre'] ?? '';
     $apellido = $v['apellido'] ?? '';
 
-    revisarTexto(texto($nombre) . ' ' . texto($apellido), 'Nombre', $motivos);
+    $completo = texto($nombre) . ' ' . texto($apellido);
+    revisarTexto($completo, 'Nombre', $motivos);
     if (!empty($v['alumno'])) revisarTexto($v['alumno'], 'Alumno', $motivos);
     if (norm($nombre) !== '' && norm($nombre) === norm($apellido)) $motivos[] = 'Nombre y apellido iguales';
+    // Famosos y jugadores de Racing ya no se bloquean: se dejan pasar marcados "A revisar"
+    if (esRacing($completo)) $motivos[] = 'Nombre de jugador de Racing';
+    elseif (esFamoso($completo)) $motivos[] = 'Nombre de persona famosa';
+    if (!empty($v['alumno']) && esFamoso($v['alumno'])) $motivos[] = 'Alumno con nombre de persona famosa';
     revisarDni($v['dni'] ?? '', $motivos);
 
     if (!$motivos) return null;

@@ -2,10 +2,16 @@
 // POST /api/registro  ->  registra un visitante desde el formulario público
 require_once __DIR__ . '/_auth.php';
 require_once __DIR__ . '/_troll.php';
+require_once __DIR__ . '/_antiabuso.php';
 
 soloMetodo('POST');
 
-list($d, $errores) = validarVisitante(cuerpo());
+$b = cuerpo();
+controlarLimite();
+// Bot que completó el campo trampa: se le contesta como si se hubiera registrado, sin guardar nada
+if (esBot($b)) responder(201, ['ok' => true, 'duplicado' => false, 'visitante' => null]);
+
+list($d, $errores) = validarVisitante($b);
 if ($errores) {
     $resp = ['error' => 'Revisá los datos marcados.', 'errores' => $errores];
     // Si quiso anotarse con nombre de jugador de Racing, el formulario muestra un segundo la pantalla roja
@@ -14,13 +20,16 @@ if ($errores) {
 }
 
 try {
-    $resultado = transaccion(function () use ($d) {
+    $resultado = transaccion(function () use ($d, $b) {
         // Si el alumno ya fue fusionado con otro nombre, usar el nombre unificado
         if ($d['conAlumno']) {
             $al = q('SELECT nombre FROM alumno_alias WHERE alias_norm = ? AND activo = 1', [norm($d['alumno'])])->fetch();
             if ($al) $d['alumno'] = $al['nombre'];
         }
         $alerta = analizar($d);
+        // Enviado demasiado rápido o sin el formulario: entra igual, pero queda "A revisar"
+        $tiempo = strtolower(DETECTOR_TROLL) === 'off' ? null : motivoTiempo($b);
+        if ($tiempo) $alerta = mb_substr($alerta ? "$alerta; $tiempo" : $tiempo, 0, 160);
 
         // Una persona es DNI + nombre + apellido. Con el mismo DNI puede haber varias personas
         // (por ejemplo, alguien que se equivocó al escribirlo): se busca la que coincide en todo.

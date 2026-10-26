@@ -131,6 +131,7 @@ source C:/xampp/htdocs/registro-muestra/migracion-v2.sql
 source C:/xampp/htdocs/registro-muestra/migracion-v3.sql
 source C:/xampp/htdocs/registro-muestra/migracion-v4.sql
 source C:/xampp/htdocs/registro-muestra/migracion-v5.sql
+source C:/xampp/htdocs/registro-muestra/migracion-v6.sql
 ```
 
 | Migración | Qué agrega |
@@ -139,6 +140,7 @@ source C:/xampp/htdocs/registro-muestra/migracion-v5.sql
 | `migracion-v3.sql` | Columnas `curso` y `division` (año y división del alumno) |
 | `migracion-v4.sql` | Tablas `ajustes` (PIN cifrado) e `intentos_pin` (bloqueo por PIN incorrectos) |
 | `migracion-v5.sql` | Una persona pasa a ser **DNI + nombre + apellido** (ver [Registros con el mismo DNI](#registros-con-el-mismo-dni)) |
+| `migracion-v6.sql` | Tabla `limite_registro` (límite de registros por IP del formulario público) |
 
 Si el usuario de la base tiene permiso de `CREATE` y `ALTER`, la API también crea sola las tablas y columnas que falten la primera vez que se usa (`asegurarEsquema` en `public/api/_db.php`). Con los permisos mínimos de arriba no puede, por eso están las migraciones.
 
@@ -285,7 +287,7 @@ Todo lo que llega a la API se revisa en el servidor, aunque el formulario ya lo 
 | Ids de registros y fusiones | Enteros positivos | `idDe` en `public/api/_validar.php` |
 | PIN | 4 a 8 números; se compara cifrado | `public/api/_auth.php` |
 | `?since=` del panel | Fecha con formato exacto | `public/api/visitantes.php` |
-| Cuerpo del pedido | Un objeto JSON válido; si no, 400 | `cuerpo()` en `public/api/_db.php` |
+| Cuerpo del pedido | Un objeto JSON válido con `Content-Type: application/json`; si no, 400 (o 415 si no es JSON) | `cuerpo()` en `public/api/_db.php` |
 
 Lo que no cumple se **rechaza con error 400** y no se guarda; no se "arregla" en silencio. Además:
 
@@ -298,6 +300,20 @@ Lo que no cumple se **rechaza con error 400** y no se guarda; no se "arregla" en
 - **Permisos de la base:** el usuario de la app solo tiene `SELECT`, `INSERT` y `UPDATE`.
 - **Librería del QR:** `qrcode.js` 1.0.0 (licencia MIT) está copiada en `public/assets/vendor/`. No se carga código de otros sitios.
 - **Cabeceras HTTP** (`public/.htaccess`): `Content-Security-Policy` (solo scripts propios), `Strict-Transport-Security` (con HTTPS), `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy` y `Permissions-Policy`.
+- **Carpeta del proyecto:** el `.htaccess` de la raíz bloquea con 403 todo lo que no esté en `public/` (`.env`, `.git`, migraciones, README), por si Apache sirve la carpeta entera como en XAMPP. En el servidor igual conviene que el `DocumentRoot` apunte a `public/`.
+
+### Registros masivos (scripts y bots)
+
+El formulario es público, así que alguien podría mandar registros con un script. Estas defensas lo frenan **sin demorar a la gente real** (agregan unos 5 ms por registro) y, si alguna falla, el registro pasa igual: nunca dejan a nadie afuera en la puerta. Están en `public/api/_antiabuso.php`.
+
+| Defensa | Qué hace |
+|---|---|
+| Campo trampa | Un campo oculto (`web`) que una persona nunca ve. Si llega completo, es un bot: se le responde como si se hubiera registrado, pero no se guarda nada |
+| Tiempo de llenado | El formulario manda cuánto tardó (`t`). Si fue menos de 2 segundos, o el pedido no vino del formulario, se registra igual pero queda **A revisar** (el autocompletar del celular puede ser muy rápido, por eso no se bloquea) |
+| Límite por IP | 60 registros por minuto y 600 por hora desde la misma IP. Pasado eso responde **429** con "Esperá un minuto". Es alto a propósito, porque en la muestra mucha gente comparte el Wi-Fi de la escuela |
+| Solo JSON | El registro exige `Content-Type: application/json` (si no, 415): una página ajena no puede mandar registros desde el navegador de un visitante con un formulario común |
+
+El límite de 5 personas por celular de la pantalla verde es del navegador: ordena a la gente real, pero no frena un script. El que frena scripts es el límite por IP del servidor.
 
 **Skill de seguridad:** en `.claude/skills/ciberseguridad-apps-eventos/` hay una skill de Claude Code con las reglas de seguridad de este tipo de apps y la lista de pruebas con datos hostiles.
 
@@ -412,10 +428,11 @@ Para separar registros fusionados no uses SQL: usá **Deshacer** en el historial
 | `Access denied for user 'muestra_user'` | Contraseña distinta, o falta el `GRANT` | Revisá `DB_PASSWORD` y repetí el `GRANT` como root |
 | `ERROR 1396 CREATE USER failed` | El usuario ya existe | No pasa nada: ejecutá solo el `GRANT` |
 | "No se pudo verificar el PIN" | Faltan las tablas `ajustes` / `intentos_pin` | Ejecutá `migracion-v4.sql` como root |
-| "No se pudo guardar el registro" justo después de actualizar | Falta alguna migración | Ejecutá las migraciones v2 a v5 como root |
+| "No se pudo guardar el registro" justo después de actualizar | Falta alguna migración | Ejecutá las migraciones v2 a v6 como root |
 | Alguien con el mismo DNI y otro nombre no se puede registrar | Falta la migración v5 (el DNI sigue siendo único) | Ejecutá `migracion-v5.sql` como root |
 | `PIN incorrecto` | Alguien lo cambió y ya no es 1111 | Preguntale al admin. Si nadie lo sabe, ver "Si se olvidan del PIN" en la sección 4 |
 | "Demasiados intentos con PIN incorrecto" | 5 PIN incorrectos seguidos desde esa conexión | Esperá 2 minutos y probá con el PIN correcto |
+| "Hay demasiados registros seguidos desde esta conexión" | Más de 60 registros en un minuto desde la misma IP | Esperar un minuto. Si en la muestra pasa con gente real (todos en el mismo Wi-Fi), subir `LIMITE_MINUTO` en `public/api/_antiabuso.php` |
 | Los íconos se ven como palabras (`edit`, `search`) | Sin internet para cargar la fuente de íconos | Se arregla solo con conexión; no afecta el funcionamiento |
 
 ---
@@ -461,6 +478,7 @@ public/                  ← lo que va en la carpeta web del servidor
     _validar.php         Validación estricta de los datos del visitante
     _famosos.php         Famosos con los que no se puede registrar nadie
     _troll.php           Detector de registros sospechosos
+    _antiabuso.php       Campo trampa, tiempo de llenado y límite de registros por IP
     registro.php         POST /api/registro     Formulario público
     visitantes.php       GET  /api/visitantes   Lista en vivo (?since= para cambios)
     checkin.php          POST /api/checkin      Marcar o deshacer ingreso
@@ -469,8 +487,9 @@ public/                  ← lo que va en la carpeta web del servidor
     fusionar.php         POST /api/fusionar     Fusionar visitantes o alumnos
     fusiones.php         GET/POST /api/fusiones Historial y deshacer
     pin.php              POST /api/pin          Cambiar el PIN del panel
+.htaccess                Bloquea todo lo que no sea public/ si Apache sirve la carpeta entera
 schema.sql               Crea la base desde cero
-migracion-v2..v5.sql     Actualizan una base de una versión anterior sin borrar registros
+migracion-v2..v6.sql     Actualizan una base de una versión anterior sin borrar registros
 ```
 
 Todos los endpoints del panel exigen el PIN. El formulario público solo puede crear registros.

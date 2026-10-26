@@ -73,6 +73,17 @@ CREATE TABLE IF NOT EXISTS intentos_pin (
   PRIMARY KEY (ip)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Límite de registros por IP del formulario público (antiabuso): cuántos registros
+-- mandó cada IP en el minuto y en la hora actuales.
+CREATE TABLE IF NOT EXISTS limite_registro (
+  ip          VARCHAR(45)  NOT NULL,
+  min_inicio  DATETIME     NOT NULL,
+  min_n       INT UNSIGNED NOT NULL DEFAULT 0,
+  hora_inicio DATETIME     NOT NULL,
+  hora_n      INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (ip)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Usuario de la app con permisos mínimos (no puede borrar nada).
 -- En tu PC (XAMPP) usá 'localhost'; en un servidor al que entra Vercel, usá '%'.
 -- CREATE USER 'muestra_user'@'localhost' IDENTIFIED BY 'test1234';

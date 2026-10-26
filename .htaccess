@@ -1,0 +1,11 @@
+# Red de seguridad por si Apache sirve la carpeta del proyecto entera (por ejemplo en XAMPP:
+# http://localhost/registro-muestra-tec4/). Lo único público es public/. Todo lo demás
+# (.env, .git, migraciones, README, zips) da 403. En el servidor, el DocumentRoot va a public/.
+Options -Indexes
+
+RewriteEngine On
+# La raíz del proyecto lleva al formulario (se arma con la URL pedida, sin depender de la carpeta)
+RewriteCond %{REQUEST_URI} ^(.*/)$
+RewriteRule ^$ %1public/ [R=302,L]
+# public/ tiene su propio .htaccess con RewriteEngine, así que estas reglas no le aplican
+RewriteRule ^(?!public(/|$)) - [F,L]

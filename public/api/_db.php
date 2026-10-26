@@ -35,11 +35,11 @@ function db()
 
 // Crea las tablas y columnas que falten, si el usuario de la base tiene permiso para
 // hacerlo (CREATE y ALTER). Si no lo tiene, se usan schema.sql y las migraciones como root. Solo corre la primera vez: después deja
-// el archivo _esquema-v5.ok (que no se puede abrir desde el navegador) y no vuelve a revisar.
-// Para forzar que revise de nuevo, borrá ese archivo. (Si hay un _esquema-v4.ok viejo, se puede borrar.)
+// el archivo _esquema-v6.ok (que no se puede abrir desde el navegador) y no vuelve a revisar.
+// Para forzar que revise de nuevo, borrá ese archivo. (Si hay _esquema-v4.ok o v5.ok viejos, se pueden borrar.)
 function asegurarEsquema($pdo)
 {
-    $marca = __DIR__ . '/_esquema-v5.ok';
+    $marca = __DIR__ . '/_esquema-v6.ok';
     if (is_file($marca)) return;
 
     $tablas = [
@@ -73,6 +73,12 @@ function asegurarEsquema($pdo)
         'intentos_pin' => "CREATE TABLE IF NOT EXISTS intentos_pin (
            ip VARCHAR(45) NOT NULL, fallos INT UNSIGNED NOT NULL DEFAULT 0, bloqueado_hasta DATETIME(3) NULL,
            updated_at DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) ON UPDATE CURRENT_TIMESTAMP(3),
+           PRIMARY KEY (ip)
+         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+        'limite_registro' => "CREATE TABLE IF NOT EXISTS limite_registro (
+           ip VARCHAR(45) NOT NULL,
+           min_inicio DATETIME NOT NULL, min_n INT UNSIGNED NOT NULL DEFAULT 0,
+           hora_inicio DATETIME NOT NULL, hora_n INT UNSIGNED NOT NULL DEFAULT 0,
            PRIMARY KEY (ip)
          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
     ];
@@ -153,8 +159,13 @@ function responder($status, $data)
 
 // Cuerpo JSON del pedido como array. Si no es un objeto JSON válido ({...}),
 // responde 400: texto suelto, JSON roto o un array no se aceptan.
+// Exige Content-Type: application/json (si no, 415). Así una página ajena no puede mandar
+// pedidos desde el navegador de un visitante con un <form> común (text/plain o form-data).
 function cuerpo()
 {
+    if (stripos((string) ($_SERVER['CONTENT_TYPE'] ?? ''), 'application/json') !== 0) {
+        responder(415, ['error' => 'El pedido tiene que ser JSON (Content-Type: application/json).']);
+    }
     $raw = file_get_contents('php://input', false, null, 0, 65536);
     $obj = json_decode($raw === false ? '' : $raw);
     if (!($obj instanceof stdClass)) responder(400, ['error' => 'El pedido tiene que ser un objeto JSON válido.']);

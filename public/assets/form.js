@@ -14,6 +14,8 @@
   // DNI que tenga sentido para alguien que vive en Argentina (lo mismo revisa el servidor)
   const DNI_MIN = 2000000, DNI_MAX_ARG = 64999999, DNI_EXTRANJERO = 90000000;
   const dniPlausible = (n) => n >= DNI_MIN && !(n > DNI_MAX_ARG && n < DNI_EXTRANJERO);
+  // Cuándo se abrió el formulario: el servidor marca "A revisar" lo enviado en menos de 2 s (scripts)
+  let abierto = Date.now();
 
   // Guiño a la rivalidad: si alguien se anota con nombre de jugador de Racing, la pantalla
   // parpadea en rojo un segundo antes de mostrar el aviso de que no puede registrarse.
@@ -140,6 +142,8 @@
       curso: Number(form.curso.value) || null,
       division: Number(form.division.value) || null,
       parentesco: form.parentesco.value,
+      web: form.web.value, // campo trampa: una persona lo deja vacío
+      t: Date.now() - abierto,
     };
 
     const errores = validar(datos);
@@ -450,6 +454,7 @@
   /* ---------- Volver al formulario ---------- */
   function mostrarFormulario() {
     form.reset();
+    abierto = Date.now();
     actualizarAlumno();
     const n = lista.pases.length;
     $('#volver-pases').hidden = !n;

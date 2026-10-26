@@ -6,6 +6,8 @@
   const alumnoBox = $('#alumno-box');
   const submitBtn = $('#submit');
   const formError = $('#form-error');
+  const viewCargando = $('#view-cargando');
+  const CARGANDO_MIN_MS = 600; // la pantalla "Registrando…" se ve al menos esto, así no es un parpadeo
   // Pases de todas las personas registradas desde este celular (solo en el navegador, no en el servidor)
   const STORAGE_KEY = 'tec4_muestra_pases';
   const STORAGE_VIEJO = 'tec4_muestra_registro'; // versión anterior: guardaba un solo pase
@@ -151,9 +153,13 @@
 
     submitBtn.disabled = true;
     submitBtn.querySelector('span').textContent = 'Registrando…';
-    // Si tarda (hosting gratis que despierta lento), a los 4 s se avisa que espere
-    const lento = $('#form-lento');
-    const lentoTimer = setTimeout(() => { lento.hidden = false; }, 4000);
+    mostrarCargando();
+    const inicio = Date.now();
+    // Si tarda (hosting gratis que despierta lento), a los 4 s se avisa que sigue conectando
+    const lentoTimer = setTimeout(() => {
+      $('#cargando-titulo').textContent = 'Conectando…';
+      $('#cargando-sub').textContent = 'El servidor tarda unos segundos la primera vez. Esperá, no cierres esta pantalla.';
+    }, 4000);
     try {
       const r = await fetch('api/registro', {
         method: 'POST',
@@ -161,17 +167,21 @@
         body: JSON.stringify(datos),
       });
       const data = await r.json().catch(() => null);
+      await new Promise((ok) => setTimeout(ok, Math.max(0, CARGANDO_MIN_MS - (Date.now() - inicio))));
       // Si la respuesta no llegó entera (señal débil, servidor lento), el registro puede haberse
       // guardado igual. Volver a tocar Registrarme es seguro: con los mismos datos muestra esa entrada.
       if (!data || (r.ok && !data.visitante)) throw new Error('sin-respuesta');
       if (!r.ok) {
+        volverDeCargando();
         if (data.racing) flashRacing(); // quiso anotarse con nombre de jugador de Racing
         if (data.errores) mostrarErrores(data.errores);
         throw new Error(data.error || 'No se pudo registrar.');
       }
       if (data.racing) flashRacing(); // se anotó con nombre de jugador de Racing: flash rojo y después su pase
       agregarPase({ ...data.visitante, duplicado: data.duplicado });
+      volverDeCargando(); // por las dudas: si el pase no se pudo mostrar, no queda trabado en "Registrando…"
     } catch (err) {
+      volverDeCargando();
       const cortado = err.message === 'sin-respuesta' || err instanceof TypeError; // TypeError = fetch sin respuesta
       formError.textContent = !navigator.onLine
         ? 'No hay conexión a internet. Revisá los datos móviles o el Wi-Fi y tocá Registrarme otra vez.'
@@ -182,11 +192,29 @@
       formError.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } finally {
       clearTimeout(lentoTimer);
-      lento.hidden = true;
       submitBtn.disabled = false;
       submitBtn.querySelector('span').textContent = 'Registrarme';
     }
   });
+
+  // Pantalla verde "Registrando…" mientras se espera al servidor
+  function mostrarCargando() {
+    $('#cargando-titulo').textContent = 'Registrando…';
+    $('#cargando-sub').textContent = 'Guardando tus datos. No cierres esta pantalla.';
+    viewForm.hidden = true;
+    viewPass.hidden = true;
+    viewCargando.hidden = false;
+    document.querySelector('meta[name="theme-color"]').content = '#14773f';
+    window.scrollTo(0, 0);
+  }
+
+  // Si el registro no se pudo guardar, se vuelve al formulario (con los datos cargados) para mostrar el error
+  function volverDeCargando() {
+    if (viewCargando.hidden) return;
+    viewCargando.hidden = true;
+    viewForm.hidden = false;
+    document.querySelector('meta[name="theme-color"]').content = '#0f2d52';
+  }
 
   // Warm-up: despierta el servidor y la base al abrir el formulario, así el primer
   // registro sale rápido (la demora del hosting ocurre mientras la persona completa sus datos).
@@ -358,6 +386,7 @@
     if (aviso) avisoTimer = setTimeout(() => (a.hidden = true), 6000);
 
     viewForm.hidden = true;
+    viewCargando.hidden = true;
     viewPass.hidden = false;
     document.querySelector('meta[name="theme-color"]').content = '#14773f';
     window.scrollTo(0, 0);
@@ -460,6 +489,7 @@
     $('#volver-pases').hidden = !n;
     $('#volver-pases-txt').textContent = n === 1 ? 'Ver mi pase' : `Ver los ${n} pases de este celular`;
     viewPass.hidden = true;
+    viewCargando.hidden = true;
     viewForm.hidden = false;
     document.querySelector('meta[name="theme-color"]').content = '#0f2d52';
     window.scrollTo(0, 0);

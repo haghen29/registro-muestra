@@ -362,13 +362,20 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 
 .opcional { font-weight: 400; color: var(--muted); font-size: .85em; }
 
-/* Aviso "el servidor tarda…" mientras se espera el registro (no es un error) */
-.form-lento {
-  display: flex; align-items: center; gap: 8px;
-  background: var(--ok-soft); color: var(--ok); border-radius: var(--radius-sm);
-  padding: 12px 14px; margin: 0 0 16px; font-weight: 600;
+/* Pantalla verde "Registrando…" mientras se guarda el registro (después pasa al pase) */
+.cargando-centro {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; gap: clamp(14px, 3vh, 24px); min-width: 0;
 }
-.form-lento .spin { animation: spin 1s linear infinite; }
+/* "Registrando…" es una sola palabra larga: un poco más chica que "Registrado" para que entre */
+.cargando .pass-title { font-size: clamp(1.9rem, 8.5vw, 2.6rem); }
+.cargando-centro .pass-sub { margin: 0; max-width: 22em; }
+/* Aro que gira (CSS puro: no depende de que cargue la fuente de íconos) */
+.cargando-ring {
+  width: clamp(64px, 11vh, 88px); height: clamp(64px, 11vh, 88px); border-radius: 50%;
+  border: 6px solid rgba(255,255,255,.3); border-top-color: #fff;
+  animation: spin .9s linear infinite;
+}
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* Flash rojo cuando se intenta registrar con nombre de jugador de Racing */

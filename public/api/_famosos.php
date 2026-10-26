@@ -181,8 +181,16 @@ const RACING = [
     'nazareno colombo', 'facundo mura', 'juan nardoni', 'agustin almendra', 'bruno zuculini',
     'baltasar rodriguez', 'juan fernando quintero', 'maximiliano salas', 'adrian martinez',
     'roger martinez', 'luciano vietto', 'johan carbonero', 'maximiliano moralez', 'gustavo costas',
+    // Campeones 2014 y 2018-19, y otros de los últimos años
+    'gustavo bou', 'sebastian saja', 'ricardo centurion', 'luciano aued', 'oscar romero',
+    'angel romero', 'gabriel hauche', 'leonardo sigali', 'alejandro donatti', 'nery dominguez',
+    'marcelo diaz', 'augusto solari', 'matias zaracho', 'jonatan cristaldo', 'eugenio mena',
+    'neri cardozo', 'brian mansilla', 'matias rojas', 'enzo copetti', 'edwin cardona',
+    'anibal moreno', 'hernan galindez', 'agustin ojeda', 'francisco cerro', 'david barbona',
+    'claudio ubeda',
     // Históricos
     'roberto perfumo', 'juan jose pizzuti', 'humberto maschio', 'norberto raffo', 'ruben paz',
     'alfio basile', 'diego milito', 'gabriel milito', 'lisandro lopez', 'claudio lopez',
-    'ruben capria', 'oscar martin', 'ezequiel videla', 'ivan pillud',
+    'ruben capria', 'oscar martin', 'ezequiel videla', 'ivan pillud', 'agustin cejas',
+    'juan carlos cardenas', 'oreste corbatta',
 ];

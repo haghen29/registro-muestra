@@ -143,6 +143,9 @@
 
     submitBtn.disabled = true;
     submitBtn.querySelector('span').textContent = 'Registrando…';
+    // Si tarda (hosting gratis que despierta lento), a los 4 s se avisa que espere
+    const lento = $('#form-lento');
+    const lentoTimer = setTimeout(() => { lento.hidden = false; }, 4000);
     try {
       const r = await fetch('api/registro', {
         method: 'POST',
@@ -170,10 +173,16 @@
       formError.hidden = false;
       formError.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } finally {
+      clearTimeout(lentoTimer);
+      lento.hidden = true;
       submitBtn.disabled = false;
       submitBtn.querySelector('span').textContent = 'Registrarme';
     }
   });
+
+  // Warm-up: despierta el servidor y la base al abrir el formulario, así el primer
+  // registro sale rápido (la demora del hosting ocurre mientras la persona completa sus datos).
+  try { fetch('api/ping', { cache: 'no-store' }).catch(() => {}); } catch {}
 
   /* ---------- Pases guardados en este celular ---------- */
   // { pases: [...], actual: índice que se está mirando, actualizado: ms del último registro, pista: ya se mostró la animación }

@@ -348,6 +348,15 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 
 .opcional { font-weight: 400; color: var(--muted); font-size: .85em; }
 
+/* Aviso "el servidor tarda…" mientras se espera el registro (no es un error) */
+.form-lento {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--ok-soft); color: var(--ok); border-radius: var(--radius-sm);
+  padding: 12px 14px; margin: 0 0 16px; font-weight: 600;
+}
+.form-lento .spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* Flash rojo cuando se intenta registrar con nombre de jugador de Racing */
 .flash-racing {
   position: fixed; inset: 0; z-index: 9999;

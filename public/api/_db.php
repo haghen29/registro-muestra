@@ -26,9 +26,9 @@ function db()
                 PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
                 PDO::ATTR_EMULATE_PREPARES => false,
                 PDO::MYSQL_ATTR_FOUND_ROWS => true,   // filas encontradas, no solo las que cambiaron
-                // Si la base no responde, cortar a los 10 s con un error claro en vez de dejar el
+                // Si la base no responde, cortar a los 30 s con un error claro en vez de dejar el
                 // pedido colgado (en un hosting gratis, los pedidos colgados se juntan y tiran 503)
-                PDO::ATTR_TIMEOUT => 10,
+                PDO::ATTR_TIMEOUT => 30, // alcanza para el arranque lento de un hosting gratis
             ]
         );
         asegurarEsquema($pdo);

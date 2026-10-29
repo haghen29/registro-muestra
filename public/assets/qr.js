@@ -1,6 +1,6 @@
 (() => {
   // Dirección oficial del formulario. El panel es /admin y este cartel es /qr.
-  const URL_OFICIAL = 'https://muestra.tec4.ar/';
+  const URL_OFICIAL = 'https://registro.weblab.tec4.ar/';
 
   const $ = (s) => document.querySelector(s);
   const input = $('#url');

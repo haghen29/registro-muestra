@@ -1,0 +1,9 @@
+.git
+.claude
+.vercel
+.env
+.env.*
+node_modules
+*.zip
+public/api/_config.local.php
+public/api/_esquema*.ok

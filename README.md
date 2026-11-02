@@ -379,6 +379,26 @@ git commit -m "Qué cambiaste"
 git push
 ```
 
+### 6.6 Con Dokploy (Docker)
+
+El `Dockerfile` arma un contenedor con Apache + PHP con `public/` como raíz del sitio. No hace falta `_config.local.php`: los datos van como variables de entorno.
+
+1. **Base:** en el proyecto de Dokploy, **Create Service → Database → MariaDB**. Anotá el nombre de la base, el usuario, la contraseña y el **Internal Host** que muestra, y tocá **Deploy**. Las tablas se crean solas la primera vez que se usa la app (ese usuario tiene permiso de `CREATE` y `ALTER`).
+2. **App:** **Create Service → Application** → proveedor **GitHub** (o **Git** con `https://github.com/haghen29/registro-muestra.git`), rama `main`, **Build Type: Dockerfile**.
+3. **Environment:**
+   ```
+   DB_HOST=<Internal Host de la base>
+   DB_PORT=3306
+   DB_USER=<usuario>
+   DB_PASSWORD=<contraseña>
+   DB_NAME=<nombre de la base>
+   ADMIN_PIN=1111
+   ```
+4. **Domains:** `registro.apps.tec4.ar`, puerto **80**, **HTTPS** con Let's Encrypt. El DNS de `registro.apps.tec4.ar` (o `*.apps.tec4.ar`) tiene que apuntar a la IP del servidor de Dokploy.
+5. **Deploy** y probá `https://registro.apps.tec4.ar/api/ping`: tiene que decir `"base":true`.
+
+Detrás del proxy de Dokploy, Apache toma la IP real del visitante del `X-Forwarded-For` que agrega el proxy (`mod_remoteip`), así el límite de registros y el bloqueo por PIN siguen siendo por persona y no para todos juntos.
+
 ---
 
 ## 7. El día de la muestra
